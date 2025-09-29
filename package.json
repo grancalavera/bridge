@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev:react": "cd examples/react-app && vite",
+    "build:react": "cd examples/react-app && tsc -b && vite build",
+    "preview:react": "cd examples/react-app && vite preview",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@types/lodash": "4.17.20",
+    "@types/node": "^24.6.0",
     "@types/react": "19.1.10",
     "@types/react-dom": "19.1.7",
     "@vitejs/plugin-react-swc": "4.0.0",

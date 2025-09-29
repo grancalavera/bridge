@@ -1,3 +1,3 @@
-import { createSharedWorkerRuntime } from "../core/runtime";
+import { createSharedWorkerRuntime } from "../../src/runtime";
 import { echoWorker } from "./worker";
 createSharedWorkerRuntime(echoWorker);

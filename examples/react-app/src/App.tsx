@@ -1,6 +1,6 @@
 import { bind, Subscribe } from "@react-rxjs/core";
 import { useState } from "react";
-import { echoClient, subscribe } from "./shared-worker/echo";
+import { echoClient, subscribe } from "../../echo";
 
 const [useEcho] = bind((timestamp?: boolean) =>
   subscribe("subscribeEcho", { timestamp }),
@@ -57,7 +57,7 @@ function App() {
 
 const EchoSubscription = ({ timestamp = false }: { timestamp?: boolean }) => {
   const echo = useEcho(timestamp);
-  return <p>{echo}</p>;
+  return <p>{String(echo)}</p>;
 };
 
 export default App;
