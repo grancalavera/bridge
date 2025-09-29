@@ -1,15 +1,7 @@
-import memoize from "lodash/memoize";
 import { createClient } from "../core/client";
 import type { EchoContract } from "./contract";
+import EchoWorker from "./worker-runtime?sharedworker";
 
-export const getClient = memoize((name: string = "Echo Client") =>
-  createClient<EchoContract>({
-    sharedWorker: new SharedWorker(
-      new URL("./worker-runtime.ts", import.meta.url),
-      {
-        type: "module",
-        name,
-      },
-    ),
-  }),
-);
+export const [echoClient, subscribe] = createClient<EchoContract>({
+  sharedWorker: new EchoWorker({ name: "Echo Worker" }),
+});
