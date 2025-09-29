@@ -1,5 +1,5 @@
 import * as Comlink from "comlink";
-import { from, Observable, switchMap } from "rxjs";
+import { Observable } from "rxjs";
 
 /**
  * Type helper that ensures only structured cloneable JavaScript types are allowed.
@@ -151,6 +151,46 @@ export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
   Comlink.wrap<WorkerContract<T>>(port);
 
 /**
+ * Extracts only the keys from an Operations interface that correspond to Query types.
+ * This utility type filters out Mutation and Subscription operations, leaving only query keys.
+ *
+ * Example:
+ * ```typescript
+ * interface MyOperations {
+ *   getData: Query<void, string>;
+ *   updateData: Mutation<string, void>;
+ *   watchChanges: Subscription<void, number>;
+ * }
+ *
+ * type QueryKeys = QueryKey<MyOperations>; // "getData"
+ * ```
+ */
+export type QueryKey<T extends Operations> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [K in keyof T]: T[K] extends Query<any, any> ? K : never;
+}[keyof T];
+
+/**
+ * Extracts only the keys from an Operations interface that correspond to Mutation types.
+ * This utility type filters out Query and Subscription operations, leaving only mutation keys.
+ *
+ * Example:
+ * ```typescript
+ * interface MyOperations {
+ *   getData: Query<void, string>;
+ *   updateData: Mutation<string, void>;
+ *   watchChanges: Subscription<void, number>;
+ * }
+ *
+ * type MutationKeys = MutationKey<MyOperations>; // "updateData"
+ * ```
+ */
+export type MutationKey<T extends Operations> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [K in keyof T]: T[K] extends Mutation<any, any> ? K : never;
+}[keyof T];
+
+/**
  * Extracts only the keys from an Operations interface that correspond to Subscription types.
  * This utility type filters out Query and Mutation operations, leaving only subscription keys.
  *
@@ -171,6 +211,44 @@ export type SubscriptionKey<T extends Operations> = {
 }[keyof T];
 
 /**
+ * Extracts the input type from a query operation.
+ * This utility type retrieves the Input type parameter from a Query type.
+ *
+ * Example:
+ * ```typescript
+ * interface MyOperations {
+ *   getData: Query<string, { userId: string }>;
+ * }
+ *
+ * type Input = QueryInput<MyOperations, "getData">; // { userId: string } | undefined
+ * ```
+ */
+export type QueryInput<
+  T extends Operations,
+  K extends QueryKey<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+> = T[K] extends Query<any, infer Input> ? Input : never;
+
+/**
+ * Extracts the input type from a mutation operation.
+ * This utility type retrieves the Input type parameter from a Mutation type.
+ *
+ * Example:
+ * ```typescript
+ * interface MyOperations {
+ *   updateData: Mutation<string, { userId: string }>;
+ * }
+ *
+ * type Input = MutationInput<MyOperations, "updateData">; // { userId: string } | undefined
+ * ```
+ */
+export type MutationInput<
+  T extends Operations,
+  K extends MutationKey<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+> = T[K] extends Mutation<any, infer Input> ? Input : never;
+
+/**
  * Extracts the input type from a subscription operation.
  * This utility type retrieves the Input type parameter from a Subscription type.
  *
@@ -189,37 +267,27 @@ export type SubscriptionInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > = T[K] extends Subscription<any, infer Input> ? Input : never;
 
-/**
- * Creates an RxJS operator that subscribes to a specific subscription operation on a client.
- * This function bridges the gap between the callback-based subscription API and RxJS observables.
- *
- * @param key The subscription key to subscribe to (must be a valid subscription operation)
- * @param input Optional input parameter for the subscription (if required)
- * @returns An RxJS operator that takes a client and returns an Observable of subscription updates
- *
- * Usage:
- * ```typescript
- * // Given a client with subscription operations
- * const client$ = of(myClient);
- *
- * // Subscribe to updates from a specific subscription
- * const updates$ = client$.pipe(
- *   subscribeTo('watchChanges', { userId: 'user123' })
- * );
- *
- * updates$.subscribe(update => console.log('Received:', update));
- * ```
- *
- * The operator:
- * 1. Extracts the Update type from the subscription
- * 2. Creates an Observable that wraps the callback-based subscription
- * 3. Handles cleanup by calling the unsubscribe function when the observable is unsubscribed
- */
-export const subscribeTo = <T extends Operations, K extends SubscriptionKey<T>>(
-  key: K,
-  input?: SubscriptionInput<T, K>,
-) =>
-  switchMap((client: T) => {
+export const queries =
+  <T extends Operations>(client: Promise<T>) =>
+  <K extends QueryKey<T>>(key: K, input?: QueryInput<T, K>) =>
+    client.then((c) => {
+      const query = c[key] as T[K];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (query as any)(input);
+    });
+
+export const mutations =
+  <T extends Operations>(client: Promise<T>) =>
+  <K extends MutationKey<T>>(key: K, input?: MutationInput<T, K>) =>
+    client.then((c) => {
+      const mutation = c[key] as T[K];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (mutation as any)(input);
+    });
+
+export const subscriptions =
+  <T extends Operations>(client: T) =>
+  <K extends SubscriptionKey<T>>(key: K, input?: SubscriptionInput<T, K>) => {
     type U =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       T[K] extends Subscription<infer Update, any> ? Update : never;
@@ -235,10 +303,4 @@ export const subscribeTo = <T extends Operations, K extends SubscriptionKey<T>>(
 
       return () => unsubscribePromise.then((f: () => void) => f());
     });
-  });
-
-export const fromClient = <T extends Operations, K extends SubscriptionKey<T>>(
-  client: Promise<T>,
-  key: K,
-  input?: SubscriptionInput<T, K>,
-) => from(client).pipe(subscribeTo(key, input));
+  };

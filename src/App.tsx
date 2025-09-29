@@ -1,23 +1,10 @@
 import { bind, Subscribe } from "@react-rxjs/core";
 import { useState } from "react";
-import { from } from "rxjs";
-import { subscribeTo } from "./shared-worker/core/model";
-import * as echo from "./shared-worker/echo";
+import { echoClient, subscribe } from "./shared-worker/echo";
 
-const [useEcho] = bind(
-  from(echo.getClient()).pipe(subscribeTo("subscribeEcho")),
+const [useEcho] = bind((timestamp?: boolean) =>
+  subscribe("subscribeEcho", { timestamp }),
 );
-
-const [useEchoWithTimestamp] = bind(
-  from(echo.getClient()).pipe(
-    subscribeTo("subscribeEcho", { timestamp: true }),
-  ),
-);
-
-const sendEcho = async (message: string) => {
-  const client = await echo.getClient();
-  return client.echo(message);
-};
 
 function App() {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -34,7 +21,7 @@ function App() {
         <button
           onClick={async () => {
             setCount((i) => i + 1);
-            const response = await sendEcho(`Hello World! [${count}]`);
+            const response = await echoClient.echo(`Hello World! [${count}]`);
             setEchoResponse(response);
           }}
         >
@@ -60,7 +47,7 @@ function App() {
         </button>
         {isTimestampSubscribed && (
           <Subscribe fallback={<p>Waiting for timestamped messages...</p>}>
-            <EchoTimestampSubscription />
+            <EchoSubscription timestamp={true} />
           </Subscribe>
         )}
       </section>
@@ -68,13 +55,8 @@ function App() {
   );
 }
 
-const EchoSubscription = () => {
-  const echo = useEcho();
-  return <p>{echo}</p>;
-};
-
-const EchoTimestampSubscription = () => {
-  const echo = useEchoWithTimestamp();
+const EchoSubscription = ({ timestamp = false }: { timestamp?: boolean }) => {
+  const echo = useEcho(timestamp);
   return <p>{echo}</p>;
 };
 
