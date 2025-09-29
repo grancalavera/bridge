@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "puppeteer": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-puppeteer"],
+      "enabled": true,
+      "environment": {
+        "PUPPETEER_TMP_DIR": ".puppeteer/"
+      }
+    }
+  }
+}
