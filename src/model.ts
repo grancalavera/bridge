@@ -82,15 +82,24 @@ export type Mutation<
 
 /**
  * Represents a subscription operation that receives real-time updates.
- * Takes a callback function and optional input parameters.
+ * Takes callback functions for next, error, and complete events, plus optional input parameters.
  * Returns a Promise of an unsubscribe function.
  */
 export type Subscription<
   Update extends StructuredCloneable = void,
   Input extends StructuredCloneable = void
 > = Input extends void
-  ? (callback: (value: Update) => void) => Promise<() => void>
-  : (callback: (value: Update) => void, input?: Input) => Promise<() => void>;
+  ? (
+      onNext: (value: Update) => void,
+      onError?: (error: Error) => void,
+      onComplete?: () => void
+    ) => Promise<() => void>
+  : (
+      onNext: (value: Update) => void,
+      onError?: (error: Error) => void,
+      onComplete?: () => void,
+      input?: Input
+    ) => Promise<() => void>;
 
 /**
  * A collection of operations (queries, mutations, and subscriptions)
@@ -121,11 +130,15 @@ export type WorkerContract<T extends Operations> = {
     ? Input extends void
       ? (
           clientId: string,
-          callback: (value: Update) => void
+          onNext: (value: Update) => void,
+          onError?: (error: Error) => void,
+          onComplete?: () => void
         ) => Promise<ProxyMarkedFunction<() => void>>
       : (
           clientId: string,
-          callback: (value: Update) => void,
+          onNext: (value: Update) => void,
+          onError?: (error: Error) => void,
+          onComplete?: () => void,
           input?: Input
         ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
@@ -198,13 +211,22 @@ export const subscriptions =
 
     return new Observable<U>((subscriber) => {
       const subscription = client[key] as unknown as (
-        callback: (value: U) => void,
+        onNext: (value: U) => void,
+        onError?: (error: Error) => void,
+        onComplete?: () => void,
         input?: SubscriptionInput<T, K>
       ) => Promise<() => void>;
 
-      const callback = (value: U) => subscriber.next(value);
-      const unsubscribePromise = subscription(callback, input);
+      const onNext = (value: U) => subscriber.next(value);
+      const onError = (error: Error) => subscriber.error(error);
+      const onComplete = () => subscriber.complete();
+      const unsubscribePromise = subscription(
+        onNext,
+        onError,
+        onComplete,
+        input
+      );
 
-      return () => unsubscribePromise.then((f: () => void) => f());
+      return () => unsubscribePromise.then((f) => f());
     });
   };

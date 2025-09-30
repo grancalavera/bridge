@@ -17,13 +17,15 @@ export const echoWorker = createWorker<EchoContract>(
         console.log("echo", { clientId, message });
         return notify(echo$, message);
       },
-      async subscribeEcho(clientId, callback, input) {
+      async subscribeEcho(clientId, onNext, onError, onComplete, input) {
         console.log("subscribeEcho", { clientId, input });
         const timestamp = input?.timestamp;
         return subscribe(
           timestamp ? echoWithTimestamp$ : echo$,
           clientId,
-          callback
+          onNext,
+          onError,
+          onComplete
         );
       },
     };

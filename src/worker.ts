@@ -20,7 +20,9 @@ export type WorkerContext = {
   subscribe: <T>(
     source$: Observable<T>,
     clientId: string,
-    callback: (value: T) => void,
+    onNext: (value: T) => void,
+    onError?: (error: Error) => void,
+    onComplete?: () => void,
   ) => ProxyMarkedFunction<() => void>;
   clients: ClientRepMap;
 };
@@ -37,7 +39,9 @@ const subscribe =
   <T>(
     source$: Observable<T>,
     clientId: string,
-    callback: (value: T) => void,
+    onNext: (value: T) => void,
+    onError?: (error: Error) => void,
+    onComplete?: () => void,
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 
@@ -46,7 +50,11 @@ const subscribe =
     }
     console.log("subscribe", client.clientId);
 
-    const subscription = source$.subscribe(callback);
+    const subscription = source$.subscribe({
+      next: onNext,
+      error: onError,
+      complete: onComplete,
+    });
     client.subscriptions.add(subscription);
 
     return Comlink.proxy(() => {
