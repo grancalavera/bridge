@@ -1,9 +1,9 @@
 import { bind, Subscribe } from "@react-rxjs/core";
 import { useState } from "react";
-import { echoClient, subscribe } from "../../index";
+import { echoClient, subscribe } from "./service";
 
 const [useEcho] = bind((timestamp?: boolean) =>
-  subscribe("subscribeEcho", { timestamp }),
+  subscribe("subscribeEcho", { timestamp })
 );
 
 function App() {

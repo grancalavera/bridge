@@ -1,6 +1,6 @@
 import { map, share, Subject } from "rxjs";
 import { createWorker } from "../../src/worker";
-import type { EchoContract } from "./contract";
+import type { EchoContract } from "./src/contract";
 
 export const echoWorker = createWorker<EchoContract>(
   ({ notify, subscribe }) => {
@@ -8,7 +8,7 @@ export const echoWorker = createWorker<EchoContract>(
 
     const echoWithTimestamp$ = echo$.pipe(
       map((message) => `[${new Date().toISOString()}] ${message}`),
-      share(),
+      share()
     );
 
     return {
@@ -23,9 +23,9 @@ export const echoWorker = createWorker<EchoContract>(
         return subscribe(
           timestamp ? echoWithTimestamp$ : echo$,
           clientId,
-          callback,
+          callback
         );
       },
     };
-  },
+  }
 );

@@ -31,7 +31,7 @@
   - `examples/{example-name}/index.html` - HTML template
   - `examples/{example-name}/README.md` - Example documentation
   - All other example files go directly under `examples/{example-name}/src/`
-- There is a single shared stylesheet at the root level that can be imported by all examples
+- There is a single shared stylesheet at `examples/styles.css` can be imported by all examples
 - There's a single top level `vite.config.ts` file
 - Example entries are generated dynamically in `vite.config.ts` and added to `build.rollupOptions.input`
 - There is no default React application (i.e. no configuration for `build.rollupOptions.input.main`)
