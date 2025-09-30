@@ -21,8 +21,8 @@ export type WorkerContext = {
     source$: Observable<T>,
     clientId: string,
     onNext: (value: T) => void,
-    onError?: (error: Error) => void,
-    onComplete?: () => void,
+    onError: (error: unknown) => void,
+    onComplete: () => void,
   ) => ProxyMarkedFunction<() => void>;
   clients: ClientRepMap;
 };
@@ -40,8 +40,8 @@ const subscribe =
     source$: Observable<T>,
     clientId: string,
     onNext: (value: T) => void,
-    onError?: (error: Error) => void,
-    onComplete?: () => void,
+    onError: (error: unknown) => void,
+    onComplete: () => void,
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 

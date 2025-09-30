@@ -91,13 +91,13 @@ export type Subscription<
 > = Input extends void
   ? (
       onNext: (value: Update) => void,
-      onError?: (error: Error) => void,
-      onComplete?: () => void
+      onError: (error: unknown) => void,
+      onComplete: () => void
     ) => Promise<() => void>
   : (
       onNext: (value: Update) => void,
-      onError?: (error: Error) => void,
-      onComplete?: () => void,
+      onError: (error: unknown) => void,
+      onComplete: () => void,
       input?: Input
     ) => Promise<() => void>;
 
@@ -131,14 +131,14 @@ export type WorkerContract<T extends Operations> = {
       ? (
           clientId: string,
           onNext: (value: Update) => void,
-          onError?: (error: Error) => void,
-          onComplete?: () => void
+          onError: (error: unknown) => void,
+          onComplete: () => void
         ) => Promise<ProxyMarkedFunction<() => void>>
       : (
           clientId: string,
           onNext: (value: Update) => void,
-          onError?: (error: Error) => void,
-          onComplete?: () => void,
+          onError: (error: unknown) => void,
+          onComplete: () => void,
           input?: Input
         ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
@@ -212,13 +212,13 @@ export const subscriptions =
     return new Observable<U>((subscriber) => {
       const subscription = client[key] as unknown as (
         onNext: (value: U) => void,
-        onError?: (error: Error) => void,
-        onComplete?: () => void,
+        onError: (error: unknown) => void,
+        onComplete: () => void,
         input?: SubscriptionInput<T, K>
       ) => Promise<() => void>;
 
       const onNext = (value: U) => subscriber.next(value);
-      const onError = (error: Error) => subscriber.error(error);
+      const onError = (error: unknown) => subscriber.error(error);
       const onComplete = () => subscriber.complete();
       const unsubscribePromise = subscription(
         onNext,
