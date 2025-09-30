@@ -1,6 +1,6 @@
 import { bind, Subscribe } from "@react-rxjs/core";
 import { useState } from "react";
-import { echoClient, subscribe } from "../../echo";
+import { echoClient, subscribe } from "../../index";
 
 const [useEcho] = bind((timestamp?: boolean) =>
   subscribe("subscribeEcho", { timestamp }),
