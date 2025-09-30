@@ -48,7 +48,6 @@ const subscribe =
     if (!client) {
       throw new ReferenceError(`Unknown client ${client}`);
     }
-    console.log("subscribe", client.clientId);
 
     const subscription = source$.subscribe({
       next: onNext,
@@ -58,7 +57,6 @@ const subscribe =
     client.subscriptions.add(subscription);
 
     return Comlink.proxy(() => {
-      console.log("unsubscribe", client.clientId);
       subscription.unsubscribe();
       client.subscriptions.remove(subscription);
     });
@@ -89,11 +87,9 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
         return;
       }
 
-      console.log("registerClient", clientId);
       clients.set(clientId, createClientRep(clientId));
 
       navigator.locks.request(clientId, async () => {
-        console.log("unregister client", clientId);
         const client = clients.get(clientId);
         if (!client) {
           console.warn(`Attempted to unregister unknown client ${clientId}`);
