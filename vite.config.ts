@@ -13,7 +13,9 @@ const examples = readdirSync(examplesDir).filter(file => {
   return statSync(fullPath).isDirectory()
 })
 
-const input: Record<string, string> = {}
+const input: Record<string, string> = {
+  main: resolve(__dirname, 'index.html')
+}
 
 for (const example of examples) {
   const examplePath = resolve(examplesDir, example)
@@ -35,5 +37,6 @@ export default defineConfig({
     rollupOptions: {
       input
     }
-  }
+  },
+  appType: 'mpa'
 })

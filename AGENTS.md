@@ -34,4 +34,4 @@
 - There is a single shared stylesheet at `examples/styles.css` can be imported by all examples
 - There's a single top level `vite.config.ts` file
 - Example entries are generated dynamically in `vite.config.ts` and added to `build.rollupOptions.input`
-- There is no default React application (i.e. no configuration for `build.rollupOptions.input.main`)
+- All examples are listed at `/` in runtime. The examples index is produced dynamically as new examples are added.
