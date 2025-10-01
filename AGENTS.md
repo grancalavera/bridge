@@ -4,9 +4,10 @@
 
 - **Development**: `npm run dev` - Start Vite dev server with hot reload
 - **Build**: `npm run build` - TypeScript check + production build
+- **Build Library**: `npm run build:lib` - Build library package to `dist/` using tsdown
 - **Type Check**: `npm run typecheck` - Run TypeScript compiler without emitting
 - **Preview**: `npm run preview` - Preview production build locally
-- **No test runner configured** - Testing framework not yet implemented
+- **Test**: `npm test` - Run Vitest test suite (to be implemented)
 
 ## Code Style & Conventions
 
@@ -49,3 +50,41 @@ Bridge is a library to simplify communication and state sharing between differen
 - There's a single top level `vite.config.ts` file
 - Example entries are generated dynamically in `vite.config.ts` and added to `build.rollupOptions.input`
 - All examples are listed at `/` in runtime. The examples index is produced dynamically as new examples are added.
+
+## Testing Strategy
+
+**Framework**: Vitest (to be installed)
+
+### Test Structure
+
+- **Unit Tests** (`src/**/*.test.ts`) - Test individual library functions
+  - Type system validation (Contract, Query, Mutation, Subscription types)
+  - Client creation and proxy generation logic
+  - Worker context helpers (notify, subscribe)
+  - Structured cloneable type constraints
+
+- **Integration Tests** (`tests/integration/**/*.test.ts`) - Test library from `dist/`
+  - Import from `dist/index.js` (ESM) and `dist/index.cjs` (CJS)
+  - Verify all public exports are accessible
+  - Test SharedWorker communication patterns end-to-end
+  - Validate RxJS subscription lifecycle
+
+- **Build Artifact Tests** (`tests/build/**/*.test.ts`) - Verify build output
+  - Check source maps (`index.js.map`, `index.cjs.map`) are valid
+  - Verify type declarations (`index.d.ts`, `index.d.cts`) are correct
+  - Test declaration maps (`index.d.ts.map`, `index.d.cts.map`) resolve to source
+  - Ensure both ESM and CJS formats work in their respective contexts
+
+### Test Environment
+
+- Use Vitest's browser mode or jsdom for SharedWorker testing
+- Mock SharedWorker API if needed for CI environments
+- Test both browser-like and Node.js CJS contexts
+
+### Running Tests
+
+- `npm test` - Run all tests
+- `npm run test:unit` - Run unit tests only
+- `npm run test:integration` - Run integration tests (requires built library)
+- `npm run test:watch` - Run tests in watch mode
+- Tests should run automatically before publishing the package
