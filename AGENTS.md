@@ -22,6 +22,18 @@
 - **File Structure**: Organize by feature in `src/shared-worker/[feature]/`
 - **No linting config**: No ESLint/Prettier configured - follow existing patterns
 
+## Bridge Library
+
+Bridge is a library to simplify communication and state sharing between different browsing contexts.
+
+- The library should bundled using [tsdown](https://tsdown.dev/) and must include source maps, type declarations and declaration maps.
+
+- The library package should include both the runtime version along with the entire source code.
+
+- Declaration maps must allow library users to follow any type of implementation from a code editor and open the original source file where the implementation is written, as opposed to the declaration file.
+
+- There should be an independent build that bundles the library.
+
 ## Examples
 
 - The examples for this project live in the `examples` directory.
