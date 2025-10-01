@@ -9,6 +9,37 @@
 - **Preview**: `npm run preview` - Preview production build locally
 - **Test**: `npm test` - Run Vitest test suite (to be implemented)
 
+## Versioning & Changelog
+
+This project uses [Changesets](https://github.com/changesets/changesets) for version management and changelog generation.
+
+### Workflow
+
+1. **Add a changeset** when making changes:
+   ```bash
+   npx changeset
+   ```
+   - Select package(s) to bump
+   - Choose bump type: `major` (breaking) | `minor` (feature) | `patch` (fix)
+   - Write a summary for the changelog
+
+2. **Version packages** when ready to release:
+   ```bash
+   npx changeset version
+   ```
+   - Consumes all changeset files in `.changeset/`
+   - Updates `package.json` version
+   - Generates/updates `CHANGELOG.md`
+
+3. **Publish** is handled automatically by GitHub Actions when changes are merged to `main`
+
+### Notes
+
+- Pre-1.0: Breaking changes use `minor` bumps, not `major`
+- Changesets are stored as `.changeset/*.md` files
+- The highest bump type across all changesets determines the final version bump
+- Configuration in `.changeset/config.json`
+
 ## Code Style & Conventions
 
 - **TypeScript**: Strict mode enabled, no unused locals/parameters allowed
