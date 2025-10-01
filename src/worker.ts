@@ -1,7 +1,7 @@
-import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
-import type { Operations, ProxyMarkedFunction, WorkerContract } from "./model";
 import * as Comlink from "comlink";
+import { Observable, Subscription } from "rxjs";
 import type { RegistryContract } from "./contract";
+import type { Operations, ProxyMarkedFunction, WorkerContract } from "./model";
 
 interface ClientRep {
   clientId: string;
@@ -16,22 +16,14 @@ const createClientRep = (clientId: string): ClientRep => ({
 type ClientRepMap = Map<string, ClientRep>;
 
 export type WorkerContext = {
-  notify: <T>(source$: Subject<T> | BehaviorSubject<T>, value: T) => T;
   subscribe: <T>(
     source$: Observable<T>,
     clientId: string,
     onNext: (value: T) => void,
     onError: (error: unknown) => void,
-    onComplete: () => void,
+    onComplete: () => void
   ) => ProxyMarkedFunction<() => void>;
   clients: ClientRepMap;
-};
-
-const notify = <T>(source$: Subject<T> | BehaviorSubject<T>, value: T): T => {
-  if (source$.observed) {
-    source$.next(value);
-  }
-  return value;
 };
 
 const subscribe =
@@ -41,7 +33,7 @@ const subscribe =
     clientId: string,
     onNext: (value: T) => void,
     onError: (error: unknown) => void,
-    onComplete: () => void,
+    onComplete: () => void
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 
@@ -65,20 +57,19 @@ const subscribe =
 export const createWorkerFactory =
   (clients: ClientRepMap = new Map()) =>
   <T extends Operations>(
-    factory: (context: WorkerContext) => WorkerContract<T>,
+    factory: (context: WorkerContext) => WorkerContract<T>
   ): WorkerContract<T> =>
     factory({
-      notify,
       subscribe: subscribe(clients),
       clients,
     });
 
 export type WorkerFactory<T extends Operations> = (
-  context: WorkerContext,
+  context: WorkerContext
 ) => WorkerContract<T>;
 
 export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
-  context,
+  context
 ) => {
   const { clients } = context;
   return {
@@ -103,7 +94,7 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
 };
 
 export const createWorker = <T extends Operations>(
-  factory: WorkerFactory<T>,
+  factory: WorkerFactory<T>
 ) => {
   const create = createWorkerFactory();
   return { ...create(factory), ...create(registryWorkerFactory) };

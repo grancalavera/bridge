@@ -3,7 +3,7 @@ import { createWorker } from "../../../src/worker";
 import type { EchoContract } from "./contract";
 
 export const echoWorker = createWorker<EchoContract>(
-  ({ notify, subscribe }) => {
+  ({ subscribe }) => {
     const echo$ = new Subject<string>();
 
     const echoWithTimestamp$ = echo$.pipe(
@@ -14,7 +14,8 @@ export const echoWorker = createWorker<EchoContract>(
     return {
       async echo(clientId, value) {
         const message = `[${clientId}] ${value}`;
-        return notify(echo$, message);
+        echo$.next(message);
+        return message;
       },
       async subscribeEcho(clientId, onNext, onError, onComplete, input) {
         const timestamp = input?.timestamp;
