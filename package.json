@@ -3,9 +3,29 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run build:lib && tsc -b && vite build",
+    "build:lib": "tsdown",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
@@ -24,6 +44,7 @@
     "@types/react": "19.1.10",
     "@types/react-dom": "19.1.7",
     "@vitejs/plugin-react-swc": "4.0.0",
+    "tsdown": "^0.15.6",
     "typescript": "5.8.3",
     "vite": "7.1.2"
   }

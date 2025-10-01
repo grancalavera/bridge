@@ -1,6 +1,6 @@
 import * as Comlink from "comlink";
 import type { RegistryContract } from "./contract";
-import { subscriptions, wrapWorkerPort, type Operations } from "./model";
+import { subscriptions, wrapWorkerPort, type Operations, type Subscription, type SubscriptionKey, type SubscriptionInput } from "./model";
 
 export interface CreateClientOptions {
   sharedWorker: SharedWorker;
@@ -52,7 +52,7 @@ const deriveClient = <T extends Operations>(
 export const createClient = <T extends Operations>({
   sharedWorker,
   clientId = crypto.randomUUID(),
-}: CreateClientOptions) => {
+}: CreateClientOptions): readonly [T, <K extends SubscriptionKey<T>>(key: K, input?: SubscriptionInput<T, K>) => import('rxjs').Observable<T[K] extends Subscription<infer Update, any> ? Update : never>] => {
   const { port } = sharedWorker;
   registerClient(port, clientId);
   const client = deriveClient<T>(port, clientId);
