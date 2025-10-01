@@ -55,7 +55,7 @@ type StructuredCloneable =
  */
 export type ProxyMarkedFunction<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends (...args: any[]) => any = (...args: any[]) => any,
+  T extends (...args: any[]) => any = (...args: any[]) => any
 > = T & Comlink.ProxyMarked;
 
 /**
@@ -64,7 +64,7 @@ export type ProxyMarkedFunction<
  */
 export type Query<
   Response extends StructuredCloneable = void,
-  Input extends StructuredCloneable = void,
+  Input extends StructuredCloneable = void
 > = Input extends void
   ? () => Promise<Response>
   : (input?: Input) => Promise<Response>;
@@ -75,22 +75,31 @@ export type Query<
  */
 export type Mutation<
   Response extends StructuredCloneable = void,
-  Input extends StructuredCloneable = void,
+  Input extends StructuredCloneable = void
 > = Input extends void
   ? () => Promise<Response>
   : (input?: Input) => Promise<Response>;
 
 /**
  * Represents a subscription operation that receives real-time updates.
- * Takes a callback function and optional input parameters.
+ * Takes callback functions for next, error, and complete events, plus optional input parameters.
  * Returns a Promise of an unsubscribe function.
  */
 export type Subscription<
   Update extends StructuredCloneable = void,
-  Input extends StructuredCloneable = void,
+  Input extends StructuredCloneable = void
 > = Input extends void
-  ? (callback: (value: Update) => void) => Promise<() => void>
-  : (callback: (value: Update) => void, input?: Input) => Promise<() => void>;
+  ? (
+      onNext: (value: Update) => void,
+      onError: (error: unknown) => void,
+      onComplete: () => void
+    ) => Promise<() => void>
+  : (
+      onNext: (value: Update) => void,
+      onError: (error: unknown) => void,
+      onComplete: () => void,
+      input?: Input
+    ) => Promise<() => void>;
 
 /**
  * A collection of operations (queries, mutations, and subscriptions)
@@ -121,16 +130,20 @@ export type WorkerContract<T extends Operations> = {
     ? Input extends void
       ? (
           clientId: string,
-          callback: (value: Update) => void,
+          onNext: (value: Update) => void,
+          onError: (error: unknown) => void,
+          onComplete: () => void
         ) => Promise<ProxyMarkedFunction<() => void>>
       : (
           clientId: string,
-          callback: (value: Update) => void,
-          input?: Input,
+          onNext: (value: Update) => void,
+          onError: (error: unknown) => void,
+          onComplete: () => void,
+          input?: Input
         ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
-      ? (clientId: string, ...args: Args) => Return
-      : T[K];
+    ? (clientId: string, ...args: Args) => Return
+    : T[K];
 };
 
 /**
@@ -149,46 +162,6 @@ export type WorkerProxy<T extends Operations> = Comlink.Remote<
  */
 export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
   Comlink.wrap<WorkerContract<T>>(port);
-
-/**
- * Extracts only the keys from an Operations interface that correspond to Query types.
- * This utility type filters out Mutation and Subscription operations, leaving only query keys.
- *
- * Example:
- * ```typescript
- * interface MyOperations {
- *   getData: Query<void, string>;
- *   updateData: Mutation<string, void>;
- *   watchChanges: Subscription<void, number>;
- * }
- *
- * type QueryKeys = QueryKey<MyOperations>; // "getData"
- * ```
- */
-export type QueryKey<T extends Operations> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [K in keyof T]: T[K] extends Query<any, any> ? K : never;
-}[keyof T];
-
-/**
- * Extracts only the keys from an Operations interface that correspond to Mutation types.
- * This utility type filters out Query and Subscription operations, leaving only mutation keys.
- *
- * Example:
- * ```typescript
- * interface MyOperations {
- *   getData: Query<void, string>;
- *   updateData: Mutation<string, void>;
- *   watchChanges: Subscription<void, number>;
- * }
- *
- * type MutationKeys = MutationKey<MyOperations>; // "updateData"
- * ```
- */
-export type MutationKey<T extends Operations> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [K in keyof T]: T[K] extends Mutation<any, any> ? K : never;
-}[keyof T];
 
 /**
  * Extracts only the keys from an Operations interface that correspond to Subscription types.
@@ -211,44 +184,6 @@ export type SubscriptionKey<T extends Operations> = {
 }[keyof T];
 
 /**
- * Extracts the input type from a query operation.
- * This utility type retrieves the Input type parameter from a Query type.
- *
- * Example:
- * ```typescript
- * interface MyOperations {
- *   getData: Query<string, { userId: string }>;
- * }
- *
- * type Input = QueryInput<MyOperations, "getData">; // { userId: string } | undefined
- * ```
- */
-export type QueryInput<
-  T extends Operations,
-  K extends QueryKey<T>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-> = T[K] extends Query<any, infer Input> ? Input : never;
-
-/**
- * Extracts the input type from a mutation operation.
- * This utility type retrieves the Input type parameter from a Mutation type.
- *
- * Example:
- * ```typescript
- * interface MyOperations {
- *   updateData: Mutation<string, { userId: string }>;
- * }
- *
- * type Input = MutationInput<MyOperations, "updateData">; // { userId: string } | undefined
- * ```
- */
-export type MutationInput<
-  T extends Operations,
-  K extends MutationKey<T>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-> = T[K] extends Mutation<any, infer Input> ? Input : never;
-
-/**
  * Extracts the input type from a subscription operation.
  * This utility type retrieves the Input type parameter from a Subscription type.
  *
@@ -263,27 +198,9 @@ export type MutationInput<
  */
 export type SubscriptionInput<
   T extends Operations,
-  K extends SubscriptionKey<T>,
+  K extends SubscriptionKey<T>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > = T[K] extends Subscription<any, infer Input> ? Input : never;
-
-export const queries =
-  <T extends Operations>(client: Promise<T>) =>
-  <K extends QueryKey<T>>(key: K, input?: QueryInput<T, K>) =>
-    client.then((c) => {
-      const query = c[key] as T[K];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (query as any)(input);
-    });
-
-export const mutations =
-  <T extends Operations>(client: Promise<T>) =>
-  <K extends MutationKey<T>>(key: K, input?: MutationInput<T, K>) =>
-    client.then((c) => {
-      const mutation = c[key] as T[K];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (mutation as any)(input);
-    });
 
 export const subscriptions =
   <T extends Operations>(client: T) =>
@@ -294,13 +211,22 @@ export const subscriptions =
 
     return new Observable<U>((subscriber) => {
       const subscription = client[key] as unknown as (
-        callback: (value: U) => void,
-        input?: SubscriptionInput<T, K>,
+        onNext: (value: U) => void,
+        onError: (error: unknown) => void,
+        onComplete: () => void,
+        input?: SubscriptionInput<T, K>
       ) => Promise<() => void>;
 
-      const callback = (value: U) => subscriber.next(value);
-      const unsubscribePromise = subscription(callback, input);
+      const onNext = (value: U) => subscriber.next(value);
+      const onError = (error: unknown) => subscriber.error(error);
+      const onComplete = () => subscriber.complete();
+      const unsubscribePromise = subscription(
+        onNext,
+        onError,
+        onComplete,
+        input
+      );
 
-      return () => unsubscribePromise.then((f: () => void) => f());
+      return () => unsubscribePromise.then((f) => f());
     });
   };

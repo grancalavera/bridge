@@ -20,7 +20,9 @@ export type WorkerContext = {
   subscribe: <T>(
     source$: Observable<T>,
     clientId: string,
-    callback: (value: T) => void,
+    onNext: (value: T) => void,
+    onError: (error: unknown) => void,
+    onComplete: () => void,
   ) => ProxyMarkedFunction<() => void>;
   clients: ClientRepMap;
 };
@@ -37,20 +39,24 @@ const subscribe =
   <T>(
     source$: Observable<T>,
     clientId: string,
-    callback: (value: T) => void,
+    onNext: (value: T) => void,
+    onError: (error: unknown) => void,
+    onComplete: () => void,
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 
     if (!client) {
       throw new ReferenceError(`Unknown client ${client}`);
     }
-    console.log("subscribe", client.clientId);
 
-    const subscription = source$.subscribe(callback);
+    const subscription = source$.subscribe({
+      next: onNext,
+      error: onError,
+      complete: onComplete,
+    });
     client.subscriptions.add(subscription);
 
     return Comlink.proxy(() => {
-      console.log("unsubscribe", client.clientId);
       subscription.unsubscribe();
       client.subscriptions.remove(subscription);
     });
@@ -81,11 +87,9 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
         return;
       }
 
-      console.log("registerClient", clientId);
       clients.set(clientId, createClientRep(clientId));
 
       navigator.locks.request(clientId, async () => {
-        console.log("unregister client", clientId);
         const client = clients.get(clientId);
         if (!client) {
           console.warn(`Attempted to unregister unknown client ${clientId}`);

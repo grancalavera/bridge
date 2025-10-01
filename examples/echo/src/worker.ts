@@ -1,5 +1,5 @@
 import { map, share, Subject } from "rxjs";
-import { createWorker } from "../core/worker";
+import { createWorker } from "../../../src/worker";
 import type { EchoContract } from "./contract";
 
 export const echoWorker = createWorker<EchoContract>(
@@ -8,24 +8,24 @@ export const echoWorker = createWorker<EchoContract>(
 
     const echoWithTimestamp$ = echo$.pipe(
       map((message) => `[${new Date().toISOString()}] ${message}`),
-      share(),
+      share()
     );
 
     return {
       async echo(clientId, value) {
         const message = `[${clientId}] ${value}`;
-        console.log("echo", { clientId, message });
         return notify(echo$, message);
       },
-      async subscribeEcho(clientId, callback, input) {
-        console.log("subscribeEcho", { clientId, input });
+      async subscribeEcho(clientId, onNext, onError, onComplete, input) {
         const timestamp = input?.timestamp;
         return subscribe(
           timestamp ? echoWithTimestamp$ : echo$,
           clientId,
-          callback,
+          onNext,
+          onError,
+          onComplete
         );
       },
     };
-  },
+  }
 );
