@@ -27,7 +27,11 @@
     "build": "npm run build:lib && tsc -b && vite build",
     "build:lib": "tsdown",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:unit": "vitest run src",
+    "test:integration": "vitest run tests/integration",
+    "test:watch": "vitest watch"
   },
   "dependencies": {
     "@react-rxjs/core": "^0.10.7",
@@ -44,8 +48,11 @@
     "@types/react": "19.1.10",
     "@types/react-dom": "19.1.7",
     "@vitejs/plugin-react-swc": "4.0.0",
+    "@vitest/browser": "^3.2.4",
+    "happy-dom": "^19.0.2",
     "tsdown": "^0.15.6",
     "typescript": "5.8.3",
-    "vite": "7.1.2"
+    "vite": "7.1.2",
+    "vitest": "^3.2.4"
   }
 }
