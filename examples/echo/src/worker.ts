@@ -1,6 +1,6 @@
 import { map, share, Subject } from "rxjs";
-import { createWorker } from "../../src/worker";
-import type { EchoContract } from "./src/contract";
+import { createWorker } from "../../../src/worker";
+import type { EchoContract } from "./contract";
 
 export const echoWorker = createWorker<EchoContract>(
   ({ notify, subscribe }) => {
