@@ -4,24 +4,26 @@ This example demonstrates a simple echo service using Bridge with SharedWorker a
 
 ## What it does
 
-- **Echo RPC**: Send a message to the worker and get an echoed response with client ID prefix
+- **Echo Mutation**: Send a message to the worker and get an echoed response with client ID prefix
 - **Subscribe to Echo**: Subscribe to all echo messages from any client
 - **Timestamped Subscription**: Subscribe to echo messages with ISO timestamp prefix
 
 ## Files
 
-- `contract.ts` - TypeScript contract defining the worker API
-- `worker.ts` - Worker implementation using RxJS subjects
-- `worker-runtime.ts` - Worker entry point
-- `index.ts` - Client-side exports
-- `ui/` - React UI demonstrating the echo functionality
+- `src/contract.ts` - TypeScript contract defining the worker API
+- `src/worker.ts` - Worker implementation using RxJS subjects
+- `src/worker-runtime.ts` - Worker entry point
+- `src/client.ts` - Client-side setup and subscription helper
+- `src/App.tsx` - React UI demonstrating the echo functionality
+- `src/main.tsx` - Application entry point
 
 ## How to run
 
 From the repository root:
 
 ```bash
+npm install
 npm run dev
 ```
 
-Then open the echo example in your browser.
+Then navigate to the echo example in your browser.
