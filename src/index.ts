@@ -1,12 +1,16 @@
-export { createClient } from './client.ts'
-export type { CreateClientOptions } from './client.ts'
+export { createClient } from "./client.ts";
+export type { CreateClientOptions } from "./client.ts";
 
-export { createWorker, createWorkerFactory, registryWorkerFactory } from './worker.ts'
-export type { WorkerContext, WorkerFactory } from './worker.ts'
+export {
+  createWorker,
+  createWorkerFactory,
+  registryWorkerFactory,
+} from "./worker.ts";
+export type { WorkerContext, WorkerFactory } from "./worker.ts";
 
-export { createSharedWorkerRuntime } from './runtime.ts'
+export { createSharedWorkerRuntime } from "./runtime.ts";
 
-export { wrapWorkerPort, subscriptions } from './model.ts'
+export { wrapWorkerPort, subscriptions } from "./model.ts";
 export type {
   Contract,
   Mutation,
@@ -18,6 +22,6 @@ export type {
   SubscriptionKey,
   WorkerContract,
   WorkerProxy,
-} from './model.ts'
+} from "./model.ts";
 
-export type { RegistryContract } from './contract.ts'
+export type { RegistryContract } from "./contract.ts";

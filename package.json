@@ -24,8 +24,9 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:lib && tsc -b && vite build",
+    "build": "npm run build:lib",
     "build:lib": "tsdown",
+    "build:examples": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
@@ -34,10 +35,8 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "comlink": "4.4.2"
-  },
-  "peerDependencies": {
-    "rxjs": "^7.8.2"
+    "comlink": "4.4.2",
+    "rxjs": "7.8.2"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
