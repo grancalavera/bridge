@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+# Run type checking and linting (these should fail the commit if there are errors)
+npm run typecheck
+npm run lint
+
+# Run formatting and add any changes to the current commit
+npm run format
+git add .
