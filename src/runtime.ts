@@ -1,5 +1,6 @@
 import * as Comlink from "comlink";
 
+// eslint-disable-next-line no-undef
 declare const self: SharedWorkerGlobalScope;
 
 export const createSharedWorkerRuntime = (worker: unknown) => {

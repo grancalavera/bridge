@@ -21,7 +21,7 @@ export type WorkerContext = {
     clientId: string,
     onNext: (value: T) => void,
     onError: (error: unknown) => void,
-    onComplete: () => void
+    onComplete: () => void,
   ) => ProxyMarkedFunction<() => void>;
   clients: ClientRepMap;
 };
@@ -33,7 +33,7 @@ const subscribe =
     clientId: string,
     onNext: (value: T) => void,
     onError: (error: unknown) => void,
-    onComplete: () => void
+    onComplete: () => void,
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 
@@ -57,7 +57,7 @@ const subscribe =
 export const createWorkerFactory =
   (clients: ClientRepMap = new Map()) =>
   <T extends Operations>(
-    factory: (context: WorkerContext) => WorkerContract<T>
+    factory: (context: WorkerContext) => WorkerContract<T>,
   ): WorkerContract<T> =>
     factory({
       subscribe: subscribe(clients),
@@ -65,11 +65,11 @@ export const createWorkerFactory =
     });
 
 export type WorkerFactory<T extends Operations> = (
-  context: WorkerContext
+  context: WorkerContext,
 ) => WorkerContract<T>;
 
 export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
-  context
+  context,
 ) => {
   const { clients } = context;
   return {
@@ -94,7 +94,7 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
 };
 
 export const createWorker = <T extends Operations>(
-  factory: WorkerFactory<T>
+  factory: WorkerFactory<T>,
 ) => {
   const create = createWorkerFactory();
   return { ...create(factory), ...create(registryWorkerFactory) };

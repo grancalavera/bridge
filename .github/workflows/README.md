@@ -35,6 +35,7 @@ The `publish.yml` workflow automatically publishes the package to npm when PRs a
 Pre-release versions (e.g., `0.0.1-alpha.0`) will be published under the `latest` tag by default. To publish under a different tag:
 
 Modify the publish step to:
+
 ```yaml
 - name: Publish to npm
   run: npm publish --access public --tag alpha

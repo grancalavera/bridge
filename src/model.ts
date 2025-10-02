@@ -55,7 +55,7 @@ type StructuredCloneable =
  */
 export type ProxyMarkedFunction<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends (...args: any[]) => any = (...args: any[]) => any
+  T extends (...args: any[]) => any = (...args: any[]) => any,
 > = T & Comlink.ProxyMarked;
 
 /**
@@ -64,7 +64,7 @@ export type ProxyMarkedFunction<
  */
 export type Query<
   Response extends StructuredCloneable = void,
-  Input extends StructuredCloneable = void
+  Input extends StructuredCloneable = void,
 > = Input extends void
   ? () => Promise<Response>
   : (input?: Input) => Promise<Response>;
@@ -75,7 +75,7 @@ export type Query<
  */
 export type Mutation<
   Response extends StructuredCloneable = void,
-  Input extends StructuredCloneable = void
+  Input extends StructuredCloneable = void,
 > = Input extends void
   ? () => Promise<Response>
   : (input?: Input) => Promise<Response>;
@@ -87,18 +87,18 @@ export type Mutation<
  */
 export type Subscription<
   Update extends StructuredCloneable = void,
-  Input extends StructuredCloneable = void
+  Input extends StructuredCloneable = void,
 > = Input extends void
   ? (
       onNext: (value: Update) => void,
       onError: (error: unknown) => void,
-      onComplete: () => void
+      onComplete: () => void,
     ) => Promise<() => void>
   : (
       onNext: (value: Update) => void,
       onError: (error: unknown) => void,
       onComplete: () => void,
-      input?: Input
+      input?: Input,
     ) => Promise<() => void>;
 
 /**
@@ -132,18 +132,18 @@ export type WorkerContract<T extends Operations> = {
           clientId: string,
           onNext: (value: Update) => void,
           onError: (error: unknown) => void,
-          onComplete: () => void
+          onComplete: () => void,
         ) => Promise<ProxyMarkedFunction<() => void>>
       : (
           clientId: string,
           onNext: (value: Update) => void,
           onError: (error: unknown) => void,
           onComplete: () => void,
-          input?: Input
+          input?: Input,
         ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
-    ? (clientId: string, ...args: Args) => Return
-    : T[K];
+      ? (clientId: string, ...args: Args) => Return
+      : T[K];
 };
 
 /**
@@ -198,7 +198,7 @@ export type SubscriptionKey<T extends Operations> = {
  */
 export type SubscriptionInput<
   T extends Operations,
-  K extends SubscriptionKey<T>
+  K extends SubscriptionKey<T>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > = T[K] extends Subscription<any, infer Input> ? Input : never;
 
@@ -214,7 +214,7 @@ export const subscriptions =
         onNext: (value: U) => void,
         onError: (error: unknown) => void,
         onComplete: () => void,
-        input?: SubscriptionInput<T, K>
+        input?: SubscriptionInput<T, K>,
       ) => Promise<() => void>;
 
       const onNext = (value: U) => subscriber.next(value);
@@ -224,7 +224,7 @@ export const subscriptions =
         onNext,
         onError,
         onComplete,
-        input
+        input,
       );
 
       return () => unsubscribePromise.then((f) => f());

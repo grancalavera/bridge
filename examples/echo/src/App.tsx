@@ -3,7 +3,7 @@ import { useState } from "react";
 import { echoClient, subscribe } from "./client";
 
 const [useEcho] = bind((timestamp?: boolean) =>
-  subscribe("subscribeEcho", { timestamp })
+  subscribe("subscribeEcho", { timestamp }),
 );
 
 function App() {

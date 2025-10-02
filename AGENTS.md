@@ -16,17 +16,21 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 ### Workflow
 
 1. **Add a changeset** when making changes:
+
    ```bash
    npx changeset
    ```
+
    - Select package(s) to bump
    - Choose bump type: `major` (breaking) | `minor` (feature) | `patch` (fix)
    - Write a summary for the changelog
 
 2. **Version packages** when ready to release:
+
    ```bash
    npx changeset version
    ```
+
    - Consumes all changeset files in `.changeset/`
    - Updates `package.json` version
    - Generates/updates `CHANGELOG.md`
@@ -52,7 +56,12 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 - **Async**: Prefer async/await over raw promises, use `Promise.withResolvers()`
 - **Error Handling**: Always handle async errors, use try-catch blocks
 - **File Structure**: Organize by feature in `src/shared-worker/[feature]/`
-- **No linting config**: No ESLint/Prettier configured - follow existing patterns
+- **Linting & Formatting**:
+  - ESLint configured with TypeScript and React plugins
+  - Prettier with default settings (double quotes, 2 spaces, semicolons)
+  - Pre-commit hook runs typecheck, lint, and format automatically
+  - Run `npm run lint` to check for linting errors
+  - Run `npm run format` to format code with Prettier
 
 ## Bridge Library
 
