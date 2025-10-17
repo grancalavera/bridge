@@ -63,7 +63,9 @@ export const createClient = <T extends Operations>({
   T,
   <K extends SubscriptionKey<T>>(
     key: K,
-    input?: SubscriptionInput<T, K>,
+    ...args: SubscriptionInput<T, K> extends void
+      ? []
+      : [input: SubscriptionInput<T, K>]
   ) => import("rxjs").Observable<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     T[K] extends Subscription<infer Update, any> ? Update : never

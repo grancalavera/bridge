@@ -67,7 +67,7 @@ export type Query<
   Input extends StructuredCloneable = void,
 > = Input extends void
   ? () => Promise<Response>
-  : (input?: Input) => Promise<Response>;
+  : (input: Input) => Promise<Response>;
 
 /**
  * Represents a mutation operation that modifies data.
@@ -78,7 +78,7 @@ export type Mutation<
   Input extends StructuredCloneable = void,
 > = Input extends void
   ? () => Promise<Response>
-  : (input?: Input) => Promise<Response>;
+  : (input: Input) => Promise<Response>;
 
 /**
  * Represents a subscription operation that receives real-time updates.
@@ -98,7 +98,7 @@ export type Subscription<
       onNext: (value: Update) => void,
       onError: (error: unknown) => void,
       onComplete: () => void,
-      input?: Input,
+      input: Input,
     ) => Promise<() => void>;
 
 /**
@@ -139,7 +139,7 @@ export type WorkerContract<T extends Operations> = {
           onNext: (value: Update) => void,
           onError: (error: unknown) => void,
           onComplete: () => void,
-          input?: Input,
+          input: Input,
         ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
       ? (clientId: string, ...args: Args) => Return
@@ -202,9 +202,13 @@ export type SubscriptionInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > = T[K] extends Subscription<any, infer Input> ? Input : never;
 
-export const subscriptions =
-  <T extends Operations>(client: T) =>
-  <K extends SubscriptionKey<T>>(key: K, input?: SubscriptionInput<T, K>) => {
+export const subscriptions = <T extends Operations>(client: T) => {
+  function subscribe<K extends SubscriptionKey<T>>(
+    key: K,
+    ...args: SubscriptionInput<T, K> extends void
+      ? []
+      : [input: SubscriptionInput<T, K>]
+  ) {
     type U =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       T[K] extends Subscription<infer Update, any> ? Update : never;
@@ -214,7 +218,9 @@ export const subscriptions =
         onNext: (value: U) => void,
         onError: (error: unknown) => void,
         onComplete: () => void,
-        input?: SubscriptionInput<T, K>,
+        ...args: SubscriptionInput<T, K> extends void
+          ? []
+          : [input: SubscriptionInput<T, K>]
       ) => Promise<() => void>;
 
       const onNext = (value: U) => subscriber.next(value);
@@ -224,9 +230,11 @@ export const subscriptions =
         onNext,
         onError,
         onComplete,
-        input,
+        ...args,
       );
 
       return () => unsubscribePromise.then((f) => f());
     });
-  };
+  }
+  return subscribe;
+};
