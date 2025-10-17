@@ -1,10 +1,10 @@
 import { BehaviorSubject, map, share } from "rxjs";
 import { createWorker } from "../../../src/worker";
-import type { User, UserProfileContract } from "./contract";
+import type { User, UserId, UserProfileContract } from "./contract";
 
 export const userProfileWorker = createWorker<UserProfileContract>(
   ({ subscribe }) => {
-    const users = new Map<string, BehaviorSubject<User>>([
+    const users = new Map<UserId, BehaviorSubject<User>>([
       [
         "user-1",
         new BehaviorSubject<User>({
@@ -24,9 +24,9 @@ export const userProfileWorker = createWorker<UserProfileContract>(
         }),
       ],
       [
-        "user-3",
+        3,
         new BehaviorSubject<User>({
-          id: "user-3",
+          id: 3,
           name: "Carol Davis",
           email: "carol@example.com",
           age: 42,
@@ -34,31 +34,33 @@ export const userProfileWorker = createWorker<UserProfileContract>(
       ],
     ]);
 
-    const getOrCreateUser = (userId: string): BehaviorSubject<User> => {
-      if (!users.has(userId)) {
+    const getOrCreateUser = (userId: UserId): BehaviorSubject<User> => {
+      const key = userId;
+      if (!users.has(key)) {
         users.set(
-          userId,
+          key,
           new BehaviorSubject<User>({
-            id: userId,
+            id: key,
             name: "Unknown User",
             email: "unknown@example.com",
             age: 0,
           }),
         );
       }
-      return users.get(userId)!;
+      return users.get(key)!;
     };
 
     return {
-      async getUser(clientId, input) {
-        console.log(
-          `[${clientId}] getUser called with userId: ${input.userId}`,
-        );
-        const user$ = getOrCreateUser(input.userId);
+      async getUser(clientId: string, userId: UserId) {
+        console.log(`[${clientId}] getUser called with userId: ${userId}`);
+        const user$ = getOrCreateUser(userId);
         return user$.value;
       },
 
-      async updateUser(clientId, input) {
+      async updateUser(
+        clientId: string,
+        input: { userId: UserId; updates: Partial<User> },
+      ) {
         console.log(
           `[${clientId}] updateUser called with userId: ${input.userId}`,
         );
@@ -68,11 +70,15 @@ export const userProfileWorker = createWorker<UserProfileContract>(
         return updatedUser;
       },
 
-      async watchUser(clientId, onNext, onError, onComplete, input) {
-        console.log(
-          `[${clientId}] watchUser called with userId: ${input.userId}`,
-        );
-        const user$ = getOrCreateUser(input.userId);
+      async watchUser(
+        clientId: string,
+        onNext: (value: User) => void,
+        onError: (error: unknown) => void,
+        onComplete: () => void,
+        userId: UserId,
+      ) {
+        console.log(`[${clientId}] watchUser called with userId: ${userId}`);
+        const user$ = getOrCreateUser(userId);
         const observable$ = user$.pipe(
           map((user) => ({
             ...user,

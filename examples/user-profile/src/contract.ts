@@ -5,15 +5,17 @@ import type {
   Subscription,
 } from "../../../src/model";
 
+export type UserId = number | string;
+
 export type User = {
-  id: string;
+  id: UserId;
   name: string;
   email: string;
   age: number;
 };
 
 export type UserProfileContract = Contract<{
-  getUser: Query<User, { userId: string }>;
-  updateUser: Mutation<User, { userId: string; updates: Partial<User> }>;
-  watchUser: Subscription<User, { userId: string }>;
+  getUser: Query<User, UserId>;
+  updateUser: Mutation<User, { userId: UserId; updates: Partial<User> }>;
+  watchUser: Subscription<User, UserId>;
 }>;

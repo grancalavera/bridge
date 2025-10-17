@@ -3,10 +3,10 @@ import { useState } from "react";
 import { userProfileClient, subscribe } from "./client";
 import type { User } from "./contract";
 
-const [useUser] = bind((userId: string) => subscribe("watchUser", { userId }));
+const [useUser] = bind((userId: number) => subscribe("watchUser", userId));
 
 function App() {
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [queriedUser, setQueriedUser] = useState<User | null>(null);
   const [updateName, setUpdateName] = useState("");
   const [updateEmail, setUpdateEmail] = useState("");
@@ -27,9 +27,7 @@ function App() {
         <div>
           <button
             onClick={async () => {
-              const user = await userProfileClient.getUser({
-                userId: "user-1",
-              });
+              const user = await userProfileClient.getUser("user-1");
               setQueriedUser(user);
             }}
           >
@@ -37,9 +35,7 @@ function App() {
           </button>
           <button
             onClick={async () => {
-              const user = await userProfileClient.getUser({
-                userId: "user-2",
-              });
+              const user = await userProfileClient.getUser("user-2");
               setQueriedUser(user);
             }}
           >
@@ -47,9 +43,7 @@ function App() {
           </button>
           <button
             onClick={async () => {
-              const user = await userProfileClient.getUser({
-                userId: "user-3",
-              });
+              const user = await userProfileClient.getUser(3);
               setQueriedUser(user);
             }}
           >
@@ -76,12 +70,12 @@ function App() {
         <div>
           <select
             value={selectedUserId || ""}
-            onChange={(e) => setSelectedUserId(e.target.value)}
+            onChange={(e) => setSelectedUserId(Number(e.target.value))}
           >
             <option value="">Select a user</option>
-            <option value="user-1">User 1</option>
-            <option value="user-2">User 2</option>
-            <option value="user-3">User 3</option>
+            <option value="1">User 1</option>
+            <option value="2">User 2</option>
+            <option value="3">User 3</option>
           </select>
         </div>
         {selectedUserId && (
@@ -122,15 +116,9 @@ function App() {
       <section>
         <h4>Watch User (subscription with required input)</h4>
         <div>
-          <button onClick={() => setSelectedUserId("user-1")}>
-            Watch User 1
-          </button>
-          <button onClick={() => setSelectedUserId("user-2")}>
-            Watch User 2
-          </button>
-          <button onClick={() => setSelectedUserId("user-3")}>
-            Watch User 3
-          </button>
+          <button onClick={() => setSelectedUserId(1)}>Watch User 1</button>
+          <button onClick={() => setSelectedUserId(2)}>Watch User 2</button>
+          <button onClick={() => setSelectedUserId(3)}>Watch User 3</button>
           <button onClick={() => setSelectedUserId(null)}>Unwatch</button>
         </div>
         {selectedUserId && (
@@ -143,7 +131,7 @@ function App() {
   );
 }
 
-const UserSubscription = ({ userId }: { userId: string }) => {
+const UserSubscription = ({ userId }: { userId: number }) => {
   const user = useUser(userId);
   return (
     <div>
