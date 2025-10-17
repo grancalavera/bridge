@@ -1,0 +1,8 @@
+# Changesets don't follow standard markdown structure
+.changeset/*.md
+!.changeset/README.md
+
+# Generated files
+CHANGELOG.md
+node_modules/
+dist/
