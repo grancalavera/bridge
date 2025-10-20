@@ -8,7 +8,7 @@ import { Observable } from "rxjs";
  * Supported JavaScript types:
  * - Array
  * - ArrayBuffer
- * - Boolean
+a * - Boolean
  * - DataView
  * - Date
  * - Map
@@ -65,9 +65,9 @@ export type ProxyMarkedFunction<
 export type Query<
   Response extends StructuredCloneable = void,
   Input extends StructuredCloneable = void,
-> = Input extends void
+> = [Input] extends [void]
   ? () => Promise<Response>
-  : (input?: Input) => Promise<Response>;
+  : (input: Input) => Promise<Response>;
 
 /**
  * Represents a mutation operation that modifies data.
@@ -76,9 +76,9 @@ export type Query<
 export type Mutation<
   Response extends StructuredCloneable = void,
   Input extends StructuredCloneable = void,
-> = Input extends void
+> = [Input] extends [void]
   ? () => Promise<Response>
-  : (input?: Input) => Promise<Response>;
+  : (input: Input) => Promise<Response>;
 
 /**
  * Represents a subscription operation that receives real-time updates.
@@ -88,7 +88,7 @@ export type Mutation<
 export type Subscription<
   Update extends StructuredCloneable = void,
   Input extends StructuredCloneable = void,
-> = Input extends void
+> = [Input] extends [void]
   ? (
       onNext: (value: Update) => void,
       onError: (error: unknown) => void,
@@ -98,7 +98,7 @@ export type Subscription<
       onNext: (value: Update) => void,
       onError: (error: unknown) => void,
       onComplete: () => void,
-      input?: Input,
+      input: Input,
     ) => Promise<() => void>;
 
 /**
@@ -108,7 +108,23 @@ export type Subscription<
 export type Operations = Record<
   string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Query<any, any> | Mutation<any, any> | Subscription<any, any>
+  | (() => Promise<any>)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | ((input: any) => Promise<any>)
+  | ((
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onNext: (value: any) => void,
+      onError: (error: unknown) => void,
+      onComplete: () => void,
+    ) => Promise<() => void>)
+  | ((
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onNext: (value: any) => void,
+      onError: (error: unknown) => void,
+      onComplete: () => void,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      input: any,
+    ) => Promise<() => void>)
 >;
 
 /**
@@ -139,7 +155,7 @@ export type WorkerContract<T extends Operations> = {
           onNext: (value: Update) => void,
           onError: (error: unknown) => void,
           onComplete: () => void,
-          input?: Input,
+          input: Input,
         ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (...args: infer Args) => infer Return
       ? (clientId: string, ...args: Args) => Return
@@ -179,8 +195,23 @@ export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
  * ```
  */
 export type SubscriptionKey<T extends Operations> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [K in keyof T]: T[K] extends Subscription<any, any> ? K : never;
+  [K in keyof T]: T[K] extends
+    | ((
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onNext: (value: any) => void,
+        onError: (error: unknown) => void,
+        onComplete: () => void,
+      ) => Promise<() => void>)
+    | ((
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onNext: (value: any) => void,
+        onError: (error: unknown) => void,
+        onComplete: () => void,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        input: any,
+      ) => Promise<() => void>)
+    ? K
+    : never;
 }[keyof T];
 
 /**
@@ -199,22 +230,39 @@ export type SubscriptionKey<T extends Operations> = {
 export type SubscriptionInput<
   T extends Operations,
   K extends SubscriptionKey<T>,
+> = T[K] extends (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-> = T[K] extends Subscription<any, infer Input> ? Input : never;
+  onNext: (value: any) => void,
+  onError: (error: unknown) => void,
+  onComplete: () => void,
+  input: infer Input,
+) => Promise<() => void>
+  ? Input
+  : void;
 
-export const subscriptions =
-  <T extends Operations>(client: T) =>
-  <K extends SubscriptionKey<T>>(key: K, input?: SubscriptionInput<T, K>) => {
-    type U =
+export const subscriptions = <T extends Operations>(client: T) => {
+  function subscribe<K extends SubscriptionKey<T>>(
+    key: K,
+    ...args: SubscriptionInput<T, K> extends void
+      ? []
+      : [input: SubscriptionInput<T, K>]
+  ) {
+    type U = T[K] extends (
+      onNext: (value: infer Update) => void,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      T[K] extends Subscription<infer Update, any> ? Update : never;
+      ...args: any[]
+    ) => Promise<() => void>
+      ? Update
+      : never;
 
     return new Observable<U>((subscriber) => {
       const subscription = client[key] as unknown as (
         onNext: (value: U) => void,
         onError: (error: unknown) => void,
         onComplete: () => void,
-        input?: SubscriptionInput<T, K>,
+        ...args: SubscriptionInput<T, K> extends void
+          ? []
+          : [input: SubscriptionInput<T, K>]
       ) => Promise<() => void>;
 
       const onNext = (value: U) => subscriber.next(value);
@@ -224,9 +272,11 @@ export const subscriptions =
         onNext,
         onError,
         onComplete,
-        input,
+        ...args,
       );
 
       return () => unsubscribePromise.then((f) => f());
     });
-  };
+  }
+  return subscribe;
+};
