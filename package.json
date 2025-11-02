@@ -33,9 +33,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest",
-    "test:unit": "vitest run src",
-    "test:integration": "vitest run tests/integration",
+    "test": "tsc --noEmit && vitest",
     "test:watch": "vitest watch",
     "prepare": "husky"
   },
