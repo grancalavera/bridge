@@ -24,8 +24,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:lib",
-    "build:lib": "tsdown",
+    "build": "tsc --noEmit && tsdown",
     "build:examples": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
@@ -33,7 +32,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "tsc --noEmit && vitest",
+    "test": "tsc --noEmit && vitest --run",
     "test:watch": "vitest watch",
     "prepare": "husky"
   },

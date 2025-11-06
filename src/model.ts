@@ -20,7 +20,7 @@ a * - Boolean
  * - String
  * - TypedArray (Int8Array, Uint8Array, etc.)
  */
-export type StructuredCloneable =
+type StructuredCloneable =
   | boolean
   | number
   | bigint
