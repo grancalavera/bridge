@@ -34,7 +34,8 @@
     "format:check": "prettier --check .",
     "test": "tsc --noEmit && vitest --run",
     "test:watch": "vitest watch",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "npm run build && changeset publish"
   },
   "dependencies": {
     "comlink": "4.4.2",
