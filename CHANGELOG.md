@@ -1,5 +1,11 @@
 # @grancalavera/bridge
 
+## 0.5.1
+
+### Patch Changes
+
+- 1bc3f07: Adds type tests for inference and fixes subscriptions without input incorrectly expecting an input parameter.
+
 ## 0.5.0
 
 ### Minor Changes
