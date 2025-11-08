@@ -1,5 +1,13 @@
 # @grancalavera/bridge
 
+## 0.5.2
+
+### Patch Changes
+
+- 8946737: - Fix worker contract type to account for operations without input.
+  - Add coverage for all naive happy paths on contracts.
+  - Update vitest configuration.
+
 ## 0.5.1
 
 ### Patch Changes
