@@ -38,7 +38,7 @@ const subscribe =
     const client = clients.get(clientId);
 
     if (!client) {
-      throw new ReferenceError(`Unknown client ${client}`);
+      throw new ReferenceError(`Unknown client ${clientId}`);
     }
 
     const subscription = source$.subscribe({
