@@ -142,24 +142,33 @@ export type Contract<T extends Operations> = T;
  * wrapped in Promise.
  */
 export type WorkerContract<T extends Operations> = {
-  [K in keyof T]: T[K] extends Subscription<infer Update, infer Input>
-    ? Input extends void
-      ? (
-          clientId: string,
-          onNext: (value: Update) => void,
+  [K in keyof T]: T[K] extends (
+    onNext: (value: infer Update) => void,
+    onError: (error: unknown) => void,
+    onComplete: () => void,
+  ) => Promise<() => void>
+    ? (
+        clientId: string,
+        onNext: (value: Update) => void,
+        onError: (error: unknown) => void,
+        onComplete: () => void,
+      ) => Promise<ProxyMarkedFunction<() => void>>
+    : T[K] extends (
+          onNext: (value: infer Update) => void,
           onError: (error: unknown) => void,
           onComplete: () => void,
-        ) => Promise<ProxyMarkedFunction<() => void>>
-      : (
+          input: infer Input,
+        ) => Promise<() => void>
+      ? (
           clientId: string,
           onNext: (value: Update) => void,
           onError: (error: unknown) => void,
           onComplete: () => void,
           input: Input,
         ) => Promise<ProxyMarkedFunction<() => void>>
-    : T[K] extends (...args: infer Args) => infer Return
-      ? (clientId: string, ...args: Args) => Return
-      : T[K];
+      : T[K] extends (...args: infer Args) => infer Return
+        ? (clientId: string, ...args: Args) => Return
+        : T[K];
 };
 
 /**

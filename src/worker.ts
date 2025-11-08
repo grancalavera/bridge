@@ -95,7 +95,7 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
 
 export const createWorker = <T extends Operations>(
   factory: WorkerFactory<T>,
-) => {
+): WorkerContract<T> & WorkerContract<RegistryContract> => {
   const create = createWorkerFactory();
   return { ...create(factory), ...create(registryWorkerFactory) };
 };

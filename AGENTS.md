@@ -128,3 +128,7 @@ Bridge is a library to simplify communication and state sharing between differen
 - `npm run test:integration` - Run integration tests (requires built library)
 - `npm run test:watch` - Run tests in watch mode
 - Tests should run automatically before publishing the package
+
+## Git Best Practices
+
+- **Force Pushing**: Never use `git push --force`. Always use `git push --force-with-lease` instead, which prevents accidentally overwriting commits that others have pushed to the remote branch.
