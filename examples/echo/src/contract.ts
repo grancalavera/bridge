@@ -1,6 +1,6 @@
-import type { Contract, Mutation, Subscription } from "../../../src/model";
+import type { Contract, Operation, Subscription } from "../../../src/model";
 
 export type EchoContract = Contract<{
-  echo: Mutation<string, string>;
+  echo: Operation<string, string>;
   subscribeEcho: Subscription<string, { timestamp?: boolean }>;
 }>;

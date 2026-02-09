@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import type { Contract, Mutation, Subscription } from "../../dist/index.js";
+import type { Contract, Operation, Subscription } from "../../dist/index.js";
 
 type TestContract = Contract<{
-  echo: Mutation<string, string>;
+  echo: Operation<string, string>;
   subscribeEcho: Subscription<string, { timestamp?: boolean }>;
 }>;
 

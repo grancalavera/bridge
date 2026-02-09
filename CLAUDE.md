@@ -129,6 +129,28 @@ Bridge is a library to simplify communication and state sharing between differen
 - `npm run test:watch` - Run tests in watch mode
 - Tests should run automatically before publishing the package
 
+## Smoke Testing Examples
+
+After making changes to the library, smoke test the examples with the dev server (`npm run dev`) and a browser:
+
+1. **Echo Example** (`/examples/echo/`)
+   - Click "Send Echo" — verify a response appears with a client ID and message
+   - Click "Subscribe" — verify "Waiting for messages..." appears
+   - Click "Send Echo" again — verify the subscription receives the message
+   - Open a **second tab** to `/examples/echo/`
+   - In tab 2, click "Send Echo" — switch to tab 1 and verify the subscription received the cross-tab message
+
+2. **User Profile Example** (`/examples/user-profile/`)
+   - Click "Get User 1" — verify user details (name, email, age) appear
+   - Click "Watch User 1" — verify the watch section appears with user data
+   - Select "User 1" in the update dropdown, fill in a new name, click "Update User" — verify the watch section updates
+   - Open a **second tab** to `/examples/user-profile/`
+   - In tab 1, click "Watch User 1"
+   - In tab 2, select User 1, update the name, click "Update User"
+   - Switch to tab 1 — verify the watch section shows the name updated from tab 2
+
+The multi-tab tests verify SharedWorker communication across browsing contexts.
+
 ## Git Best Practices
 
 - **Force Pushing**: Never use `git push --force`. Always use `git push --force-with-lease` instead, which prevents accidentally overwriting commits that others have pushed to the remote branch.

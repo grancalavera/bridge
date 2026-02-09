@@ -1,9 +1,4 @@
-import type {
-  Contract,
-  Query,
-  Mutation,
-  Subscription,
-} from "../../../src/model";
+import type { Contract, Operation, Subscription } from "../../../src/model";
 
 export type UserId = number | string;
 
@@ -15,7 +10,7 @@ export type User = {
 };
 
 export type UserProfileContract = Contract<{
-  getUser: Query<User, UserId>;
-  updateUser: Mutation<User, { userId: UserId; updates: Partial<User> }>;
+  getUser: Operation<User, UserId>;
+  updateUser: Operation<User, { userId: UserId; updates: Partial<User> }>;
   watchUser: Subscription<User, UserId>;
 }>;
