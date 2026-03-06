@@ -1,4 +1,5 @@
 import * as Comlink from "comlink";
+import type { ObservableNotification } from "rxjs";
 import { describe, expectTypeOf, test } from "vitest";
 import {
   Contract,
@@ -75,9 +76,7 @@ describe("subscription", () => {
   test("should take an input parameter at the last positional argument", () => {
     type Expected = [
       string,
-      (x: string) => void,
-      (x: unknown) => void,
-      () => void,
+      (notification: ObservableNotification<string>) => void,
       string,
     ];
 
@@ -89,9 +88,7 @@ describe("subscription", () => {
   test("should not take an input parameter at the last positional argument", () => {
     type Expected = [
       string,
-      (x: string) => void,
-      (x: unknown) => void,
-      () => void,
+      (notification: ObservableNotification<string>) => void,
     ];
 
     expectTypeOf(

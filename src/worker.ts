@@ -1,5 +1,6 @@
 import * as Comlink from "comlink";
-import { Observable, Subscription } from "rxjs";
+import { Observable, Subscription, type ObservableNotification } from "rxjs";
+import { materialize } from "rxjs/operators";
 import type { RegistryContract } from "./contract";
 import type { Operations, ProxyMarkedFunction, WorkerContract } from "./model";
 
@@ -19,9 +20,7 @@ export type WorkerContext = {
   subscribe: <T>(
     source$: Observable<T>,
     clientId: string,
-    onNext: (value: T) => void,
-    onError: (error: unknown) => void,
-    onComplete: () => void,
+    onNotification: (n: ObservableNotification<T>) => void,
   ) => ProxyMarkedFunction<() => void>;
   clients: ClientRepMap;
 };
@@ -31,9 +30,7 @@ const subscribe =
   <T>(
     source$: Observable<T>,
     clientId: string,
-    onNext: (value: T) => void,
-    onError: (error: unknown) => void,
-    onComplete: () => void,
+    onNotification: (n: ObservableNotification<T>) => void,
   ): ProxyMarkedFunction<() => void> => {
     const client = clients.get(clientId);
 
@@ -41,11 +38,7 @@ const subscribe =
       throw new ReferenceError(`Unknown client ${clientId}`);
     }
 
-    const subscription = source$.subscribe({
-      next: onNext,
-      error: onError,
-      complete: onComplete,
-    });
+    const subscription = source$.pipe(materialize()).subscribe(onNotification);
     client.subscriptions.add(subscription);
 
     return Comlink.proxy(() => {

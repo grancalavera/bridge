@@ -70,13 +70,7 @@ export const userProfileWorker = createWorker<UserProfileContract>(
         return updatedUser;
       },
 
-      async watchUser(
-        clientId: string,
-        onNext: (value: User) => void,
-        onError: (error: unknown) => void,
-        onComplete: () => void,
-        userId: UserId,
-      ) {
+      async watchUser(clientId, onNotification, userId) {
         console.log(`[${clientId}] watchUser called with userId: ${userId}`);
         const user$ = getOrCreateUser(userId);
         const observable$ = user$.pipe(
@@ -86,7 +80,7 @@ export const userProfileWorker = createWorker<UserProfileContract>(
           })),
           share(),
         );
-        return subscribe(observable$, clientId, onNext, onError, onComplete);
+        return subscribe(observable$, clientId, onNotification);
       },
     };
   },

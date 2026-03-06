@@ -1,4 +1,5 @@
 import * as Comlink from "comlink";
+import type { ObservableNotification, Observable } from "rxjs";
 import type { RegistryContract } from "./contract";
 import {
   subscriptions,
@@ -65,9 +66,11 @@ export const createClient = <T extends Operations>({
     ...args: SubscriptionInput<T, K> extends void
       ? []
       : [input: SubscriptionInput<T, K>]
-  ) => import("rxjs").Observable<
+  ) => Observable<
     T[K] extends (
-      onNext: (value: infer Update) => void,
+      onNotification: (
+        notification: ObservableNotification<infer Update>,
+      ) => void,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...args: any[]
     ) => Promise<() => void>

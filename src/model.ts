@@ -1,5 +1,6 @@
 import * as Comlink from "comlink";
-import { Observable } from "rxjs";
+import { Observable, Subject, type ObservableNotification } from "rxjs";
+import { dematerialize } from "rxjs/operators";
 
 /**
  * Type helper that ensures only structured cloneable JavaScript types are allowed.
@@ -71,22 +72,18 @@ export type Operation<
 
 /**
  * Represents a subscription operation that receives real-time updates.
- * Takes callback functions for next, error, and complete events, plus optional input parameters.
- * Returns a Promise of an unsubscribe function.
+ * Takes a single onNotification callback using RxJS ObservableNotification<T>,
+ * plus optional input parameters. Returns a Promise of an unsubscribe function.
  */
 export type Subscription<
   Update extends StructuredCloneable = void,
   Input extends StructuredCloneable = void,
 > = [Input] extends [void]
   ? (
-      onNext: (value: Update) => void,
-      onError: (error: unknown) => void,
-      onComplete: () => void,
+      onNotification: (notification: ObservableNotification<Update>) => void,
     ) => Promise<() => void>
   : (
-      onNext: (value: Update) => void,
-      onError: (error: unknown) => void,
-      onComplete: () => void,
+      onNotification: (notification: ObservableNotification<Update>) => void,
       input: Input,
     ) => Promise<() => void>;
 
@@ -100,16 +97,16 @@ export type Operations = Record<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | ((input: any) => Promise<any>)
   | ((
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onNext: (value: any) => void,
-      onError: (error: unknown) => void,
-      onComplete: () => void,
+      onNotification: (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        notification: ObservableNotification<any>,
+      ) => void,
     ) => Promise<() => void>)
   | ((
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onNext: (value: any) => void,
-      onError: (error: unknown) => void,
-      onComplete: () => void,
+      onNotification: (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        notification: ObservableNotification<any>,
+      ) => void,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       input: any,
     ) => Promise<() => void>)
@@ -131,27 +128,25 @@ export type Contract<T extends Operations> = T;
  */
 export type WorkerContract<T extends Operations> = {
   [K in keyof T]: T[K] extends (
-    onNext: (value: infer Update) => void,
-    onError: (error: unknown) => void,
-    onComplete: () => void,
+    onNotification: (
+      notification: ObservableNotification<infer Update>,
+    ) => void,
   ) => Promise<() => void>
     ? (
         clientId: string,
-        onNext: (value: Update) => void,
-        onError: (error: unknown) => void,
-        onComplete: () => void,
+        onNotification: (notification: ObservableNotification<Update>) => void,
       ) => Promise<ProxyMarkedFunction<() => void>>
     : T[K] extends (
-          onNext: (value: infer Update) => void,
-          onError: (error: unknown) => void,
-          onComplete: () => void,
+          onNotification: (
+            notification: ObservableNotification<infer Update>,
+          ) => void,
           input: infer Input,
         ) => Promise<() => void>
       ? (
           clientId: string,
-          onNext: (value: Update) => void,
-          onError: (error: unknown) => void,
-          onComplete: () => void,
+          onNotification: (
+            notification: ObservableNotification<Update>,
+          ) => void,
           input: Input,
         ) => Promise<ProxyMarkedFunction<() => void>>
       : T[K] extends (...args: infer Args) => infer Return
@@ -194,16 +189,16 @@ export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
 export type SubscriptionKey<T extends Operations> = {
   [K in keyof T]: T[K] extends
     | ((
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onNext: (value: any) => void,
-        onError: (error: unknown) => void,
-        onComplete: () => void,
+        onNotification: (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          notification: ObservableNotification<any>,
+        ) => void,
       ) => Promise<() => void>)
     | ((
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onNext: (value: any) => void,
-        onError: (error: unknown) => void,
-        onComplete: () => void,
+        onNotification: (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          notification: ObservableNotification<any>,
+        ) => void,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         input: any,
       ) => Promise<() => void>)
@@ -228,10 +223,10 @@ export type SubscriptionInput<
   T extends Operations,
   K extends SubscriptionKey<T>,
 > = T[K] extends (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onNext: (value: any) => void,
-  onError: (error: unknown) => void,
-  onComplete: () => void,
+  onNotification: (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    notification: ObservableNotification<any>,
+  ) => void,
   input: infer Input,
 ) => Promise<() => void>
   ? Input
@@ -245,7 +240,9 @@ export const subscriptions = <T extends Operations>(client: T) => {
       : [input: SubscriptionInput<T, K>]
   ) {
     type U = T[K] extends (
-      onNext: (value: infer Update) => void,
+      onNotification: (
+        notification: ObservableNotification<infer Update>,
+      ) => void,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...args: any[]
     ) => Promise<() => void>
@@ -254,25 +251,24 @@ export const subscriptions = <T extends Operations>(client: T) => {
 
     return new Observable<U>((subscriber) => {
       const subscription = client[key] as unknown as (
-        onNext: (value: U) => void,
-        onError: (error: unknown) => void,
-        onComplete: () => void,
+        onNotification: (notification: ObservableNotification<U>) => void,
         ...args: SubscriptionInput<T, K> extends void
           ? []
           : [input: SubscriptionInput<T, K>]
       ) => Promise<() => void>;
 
-      const onNext = (value: U) => subscriber.next(value);
-      const onError = (error: unknown) => subscriber.error(error);
-      const onComplete = () => subscriber.complete();
-      const unsubscribePromise = subscription(
-        onNext,
-        onError,
-        onComplete,
-        ...args,
-      );
+      const notifications$ = new Subject<ObservableNotification<U>>();
+      const sub = notifications$.pipe(dematerialize()).subscribe(subscriber);
+      const onNotification = (n: ObservableNotification<U>) =>
+        notifications$.next(n);
 
-      return () => unsubscribePromise.then((f) => f());
+      const unsubscribePromise = subscription(onNotification, ...args);
+
+      return () => {
+        sub.unsubscribe();
+        notifications$.complete();
+        unsubscribePromise.then((f) => f());
+      };
     });
   }
   return subscribe;
