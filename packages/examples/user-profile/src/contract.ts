@@ -1,4 +1,4 @@
-import type { Contract, Operation, Subscription } from "../../../src/model";
+import type { Contract, Operation, Subscription } from "@grancalavera/bridge";
 
 export type UserId = number | string;
 

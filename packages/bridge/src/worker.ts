@@ -17,6 +17,13 @@ const createClientRep = (clientId: string): ClientRep => ({
 
 type ClientRepMap = Map<string, ClientRep>;
 
+/**
+ * Context passed to worker factory functions.
+ *
+ * Provides a shared `clients` map and a `subscribe` helper so that
+ * factories can register subscriptions that are automatically tracked
+ * and cleaned up per client.
+ */
 export type WorkerContext = {
   subscribe: <T>(
     source$: Observable<T>,
@@ -79,6 +86,10 @@ export const createWorkerFactory =
       clients,
     });
 
+/**
+ * A factory function that receives a {@link WorkerContext} and returns a
+ * worker contract implementing the operations defined by `T`.
+ */
 export type WorkerFactory<T extends Operations> = (
   context: WorkerContext,
 ) => WorkerContract<T>;

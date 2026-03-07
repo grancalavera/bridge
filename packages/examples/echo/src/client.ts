@@ -1,4 +1,4 @@
-import { createClient } from "../../../src/client";
+import { createClient } from "@grancalavera/bridge";
 import type { EchoContract } from "./contract";
 import EchoWorker from "./worker-runtime?sharedworker";
 

@@ -1,5 +1,5 @@
 import { BehaviorSubject, map, share } from "rxjs";
-import { createWorker } from "../../../src/worker";
+import { createWorker } from "@grancalavera/bridge";
 import type { User, UserId, UserProfileContract } from "./contract";
 
 export const userProfileWorker = createWorker<UserProfileContract>(
