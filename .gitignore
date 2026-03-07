@@ -29,3 +29,6 @@ dist-examples
 
 # Puppeteer
 .puppeteer/
+
+# Generated Claude Code skills
+.claude/skills/playwright-cli/
