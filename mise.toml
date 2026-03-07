@@ -1,0 +1,11 @@
+[settings]
+experimental = true
+
+[tools]
+node = '24'
+
+[tools."npm:@playwright/cli"]
+version = "latest"
+
+[hooks]
+enter = "playwright-cli install --skills"
