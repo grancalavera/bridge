@@ -17,6 +17,15 @@ import type {
 export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
   Comlink.wrap<WorkerContract<T>>(port);
 
+/**
+ * Creates a subscription helper for the given client proxy.
+ *
+ * Returns a function that, given a subscription key and optional input,
+ * produces an RxJS Observable that bridges the worker's materialized
+ * notification stream back into a live Observable on the client side.
+ *
+ * @param client - The client proxy whose subscription operations to wrap.
+ */
 export const subscriptions = <T extends Operations>(client: T) => {
   function subscribe<K extends SubscriptionKey<T>>(
     key: K,
@@ -59,8 +68,11 @@ export const subscriptions = <T extends Operations>(client: T) => {
   return subscribe;
 };
 
+/** Options for {@link createClient}. */
 export interface CreateClientOptions {
+  /** The SharedWorker instance to connect to. */
   sharedWorker: SharedWorker;
+  /** Optional client identifier. A random UUID is generated when omitted. */
   clientId?: string;
 }
 
