@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import type { ObservableNotification } from "rxjs";
 
 describe("RxJS Subscription Lifecycle", () => {
   beforeAll(async () => {
@@ -19,18 +20,16 @@ describe("RxJS Subscription Lifecycle", () => {
 
     type TestContract = {
       testSubscription: (
-        onNext: (value: string) => void,
-        onError: (error: unknown) => void,
-        onComplete: () => void,
+        onNotification: (notification: ObservableNotification<string>) => void,
       ) => Promise<() => void>;
     };
 
     const mockClient: TestContract = {
-      testSubscription: async (onNext, _onError, onComplete) => {
+      testSubscription: async (onNotification) => {
         setTimeout(() => {
-          onNext("test-value-1");
-          onNext("test-value-2");
-          onComplete();
+          onNotification({ kind: "N", value: "test-value-1" });
+          onNotification({ kind: "N", value: "test-value-2" });
+          onNotification({ kind: "C" });
         }, 0);
 
         return () => {};
@@ -61,16 +60,14 @@ describe("RxJS Subscription Lifecycle", () => {
 
     type TestContract = {
       errorSubscription: (
-        onNext: (value: string) => void,
-        onError: (error: unknown) => void,
-        onComplete: () => void,
+        onNotification: (notification: ObservableNotification<string>) => void,
       ) => Promise<() => void>;
     };
 
     const mockClient: TestContract = {
-      errorSubscription: async (_onNext, onError, _onComplete) => {
+      errorSubscription: async (onNotification) => {
         setTimeout(() => {
-          onError(new Error("test-error"));
+          onNotification({ kind: "E", error: new Error("test-error") });
         }, 0);
 
         return () => {};
@@ -105,16 +102,14 @@ describe("RxJS Subscription Lifecycle", () => {
 
     type TestContract = {
       longSubscription: (
-        onNext: (value: number) => void,
-        onError: (error: unknown) => void,
-        onComplete: () => void,
+        onNotification: (notification: ObservableNotification<number>) => void,
       ) => Promise<() => void>;
     };
 
     const mockClient: TestContract = {
-      longSubscription: async (onNext, _onError, _onComplete) => {
+      longSubscription: async (onNotification) => {
         const interval = setInterval(() => {
-          onNext(Date.now());
+          onNotification({ kind: "N", value: Date.now() });
         }, 10);
 
         return () => {
