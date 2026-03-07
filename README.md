@@ -2,7 +2,7 @@
 
 **Type-safe contract-based communication between browsing contexts**
 
-Bridge provides an easy way to write contract-based communication between browsing contexts using SharedWorkers. It offers three basic RPC operations: **Query**, **Mutation**, and **Subscription**.
+Bridge provides an easy way to write contract-based communication between browsing contexts using SharedWorkers. It offers two basic RPC operations: **Operation** and **Subscription**.
 
 ## Installation
 
@@ -14,9 +14,8 @@ npm install @grancalavera/bridge
 
 Bridge uses a contract-based approach where you define type-safe operations that can be executed across browsing contexts:
 
-- **Query**: Read-only operations that fetch data without side effects
-- **Mutation**: Operations that modify state and return a result
-- **Subscription**: Observable streams that push updates to clients
+- **Operation**: A unified type for both queries and mutations — takes an optional input and returns a response
+- **Subscription**: Observable streams that push updates to clients via materialized RxJS notifications
 
 All operations are backed by [Comlink](https://github.com/GoogleChromeLabs/comlink) for seamless worker communication and [RxJS](https://rxjs.dev/) for reactive subscription management.
 
@@ -27,10 +26,10 @@ All operations are backed by [Comlink](https://github.com/GoogleChromeLabs/comli
 Create a contract that describes the operations your worker will expose:
 
 ```typescript
-import type { Contract, Mutation, Subscription } from "@grancalavera/bridge";
+import type { Contract, Operation, Subscription } from "@grancalavera/bridge";
 
 export type EchoContract = Contract<{
-  echo: Mutation<string, string>;
+  echo: Operation<string, string>;
   subscribeEcho: Subscription<string, { timestamp?: boolean }>;
 }>;
 ```
@@ -58,14 +57,12 @@ export const echoWorker = createWorker<EchoContract>(({ subscribe }) => {
       echo$.next(message);
       return message;
     },
-    async subscribeEcho(clientId, onNext, onError, onComplete, input) {
+    async subscribeEcho(clientId, onNotification, input) {
       const timestamp = input?.timestamp;
       return subscribe(
         timestamp ? echoWithTimestamp$ : echo$,
         clientId,
-        onNext,
-        onError,
-        onComplete,
+        onNotification,
       );
     },
   };
@@ -88,7 +85,7 @@ export const [echoClient, subscribe] = createClient<EchoContract>({
 
 ### 4. Use in Your Application
 
-**Calling Mutations:**
+**Calling Operations:**
 
 ```typescript
 const response = await echoClient.echo("Hello World!");
@@ -130,7 +127,10 @@ function EchoMessages() {
 
 ## Examples
 
-See the [Echo example](./examples/echo) for a complete working implementation.
+This is a monorepo with examples in `packages/examples/`:
+
+- [Echo](./packages/examples/echo) — Basic operation and subscription demo
+- [User Profile](./packages/examples/user-profile) — CRUD operations with cross-tab state sync
 
 Run examples locally:
 
@@ -143,25 +143,25 @@ npm run dev
 
 - **Type Safety**: Full TypeScript support with contract-based type inference
 - **Automatic Client Management**: ClientId injection and lifecycle management using Web Locks API
-- **RxJS Integration**: Observable-based subscriptions with automatic cleanup
+- **RxJS Integration**: Observable-based subscriptions with materialized notifications and automatic cleanup
 - **Structured Cloneable**: Enforces data types that can be safely transferred across worker boundaries
 - **Multi-Context**: Share state and communicate between tabs, windows, and iframes
 
 ## Architecture
 
-**Client Side** (`src/client.ts`)
+**Client Side** (`packages/bridge/src/client.ts`)
 
 - Creates typed proxies for worker operations
 - Automatically injects clientId into all worker calls
 - Manages SharedWorker connection lifecycle
 
-**Worker Side** (`src/worker.ts`)
+**Worker Side** (`packages/bridge/src/worker.ts`)
 
-- Provides context helpers (`subscribe`, `notify`)
-- Tracks client connections with automatic cleanup
-- Integrates with RxJS for subscription management
+- Provides context helpers (`subscribe`)
+- Tracks client connections with automatic cleanup via Web Locks
+- Integrates with RxJS for subscription management using materialized notifications
 
-**Type System** (`src/model.ts`)
+**Type System** (`packages/bridge/src/model.ts`)
 
 - `Contract<T>`: Defines client-facing operations
 - `WorkerContract<T>`: Adds clientId parameter for worker implementations
