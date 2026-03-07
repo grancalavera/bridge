@@ -1,5 +1,5 @@
-import type { Contract, Mutation } from "./model";
+import type { Contract, Operation } from "./model";
 
 export type RegistryContract = Contract<{
-  registerClient: Mutation;
+  registerClient: Operation;
 }>;

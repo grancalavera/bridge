@@ -59,21 +59,10 @@ export type ProxyMarkedFunction<
 > = T & Comlink.ProxyMarked;
 
 /**
- * Represents a query operation that retrieves data.
- * Returns a Promise of the response data.
+ * Represents an operation that takes an optional input and returns a Promise of the response.
+ * Use this for both queries (data retrieval) and mutations (data modification).
  */
-export type Query<
-  Response extends StructuredCloneable = void,
-  Input extends StructuredCloneable = void,
-> = [Input] extends [void]
-  ? () => Promise<Response>
-  : (input: Input) => Promise<Response>;
-
-/**
- * Represents a mutation operation that modifies data.
- * Returns a Promise of the operation result.
- */
-export type Mutation<
+export type Operation<
   Response extends StructuredCloneable = void,
   Input extends StructuredCloneable = void,
 > = [Input] extends [void]
@@ -102,8 +91,7 @@ export type Subscription<
     ) => Promise<() => void>;
 
 /**
- * A collection of operations (queries, mutations, and subscriptions)
- * mapped by their operation names.
+ * A collection of operations and subscriptions mapped by their operation names.
  */
 export type Operations = Record<
   string,
@@ -195,8 +183,8 @@ export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
  * Example:
  * ```typescript
  * interface MyOperations {
- *   getData: Query<void, string>;
- *   updateData: Mutation<string, void>;
+ *   getData: Operation<string, void>;
+ *   updateData: Operation<void, string>;
  *   watchChanges: Subscription<void, number>;
  * }
  *

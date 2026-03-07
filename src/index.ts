@@ -13,10 +13,9 @@ export { createSharedWorkerRuntime } from "./runtime.ts";
 export { wrapWorkerPort, subscriptions } from "./model.ts";
 export type {
   Contract,
-  Mutation,
+  Operation,
   Operations,
   ProxyMarkedFunction,
-  Query,
   Subscription,
   SubscriptionInput,
   SubscriptionKey,
