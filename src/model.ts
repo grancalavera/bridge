@@ -1,6 +1,5 @@
-import * as Comlink from "comlink";
-import { Observable, Subject, type ObservableNotification } from "rxjs";
-import { dematerialize } from "rxjs/operators";
+import type * as Comlink from "comlink";
+import type { ObservableNotification } from "rxjs";
 
 /**
  * Type helper that ensures only structured cloneable JavaScript types are allowed.
@@ -164,14 +163,6 @@ export type WorkerProxy<T extends Operations> = Comlink.Remote<
 >;
 
 /**
- * Creates a Comlink remote proxy for the given worker contract using the provided MessagePort.
- * @param port The MessagePort to communicate with the worker.
- * @returns A Comlink remote proxy for the worker contract.
- */
-export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
-  Comlink.wrap<WorkerContract<T>>(port);
-
-/**
  * Extracts only the keys from an Operations interface that correspond to Subscription types.
  * This utility type filters out Query and Mutation operations, leaving only subscription keys.
  *
@@ -231,45 +222,3 @@ export type SubscriptionInput<
 ) => Promise<() => void>
   ? Input
   : void;
-
-export const subscriptions = <T extends Operations>(client: T) => {
-  function subscribe<K extends SubscriptionKey<T>>(
-    key: K,
-    ...args: SubscriptionInput<T, K> extends void
-      ? []
-      : [input: SubscriptionInput<T, K>]
-  ) {
-    type U = T[K] extends (
-      onNotification: (
-        notification: ObservableNotification<infer Update>,
-      ) => void,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...args: any[]
-    ) => Promise<() => void>
-      ? Update
-      : never;
-
-    return new Observable<U>((subscriber) => {
-      const subscription = client[key] as unknown as (
-        onNotification: (notification: ObservableNotification<U>) => void,
-        ...args: SubscriptionInput<T, K> extends void
-          ? []
-          : [input: SubscriptionInput<T, K>]
-      ) => Promise<() => void>;
-
-      const notifications$ = new Subject<ObservableNotification<U>>();
-      const sub = notifications$.pipe(dematerialize()).subscribe(subscriber);
-      const onNotification = (n: ObservableNotification<U>) =>
-        notifications$.next(n);
-
-      const unsubscribePromise = subscription(onNotification, ...args);
-
-      return () => {
-        sub.unsubscribe();
-        notifications$.complete();
-        unsubscribePromise.then((f) => f());
-      };
-    });
-  }
-  return subscribe;
-};
