@@ -1,4 +1,4 @@
-import { createClient } from "../../../src/client";
+import { createClient } from "@grancalavera/bridge";
 import type { UserProfileContract } from "./contract";
 import UserProfileWorker from "./worker-runtime?sharedworker";
 

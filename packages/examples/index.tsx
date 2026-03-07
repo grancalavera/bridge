@@ -13,7 +13,7 @@ function App() {
   const [examples, setExamples] = useState<Example[]>([]);
 
   useEffect(() => {
-    const exampleReadmes = import.meta.glob("../examples/*/README.md", {
+    const exampleReadmes = import.meta.glob("./*/README.md", {
       query: "?raw",
       import: "default",
       eager: true,
@@ -21,7 +21,7 @@ function App() {
 
     const discoveredExamples = Object.entries(exampleReadmes).map(
       ([path, content]) => {
-        const match = path.match(/examples\/([^/]+)/);
+        const match = path.match(/\.\/([^/]+)/);
         const exampleName = match ? match[1] : "";
 
         const lines = (content as string).split("\n");

@@ -1,72 +1,36 @@
 {
-  "name": "@grancalavera/bridge",
-  "private": false,
-  "version": "0.5.2",
+  "name": "@grancalavera/bridge-monorepo",
+  "private": true,
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
-    }
-  },
-  "files": [
-    "dist",
-    "src"
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && tsdown",
-    "build:examples": "tsc -b && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "dev": "npm run dev -w packages/examples",
+    "build": "npm run build -w packages/bridge",
+    "build:examples": "npm run build -w packages/examples",
+    "typecheck": "npm run typecheck -w packages/bridge",
+    "typecheck:examples": "npm run typecheck -w packages/examples",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "tsc --noEmit && vitest --run",
-    "test:watch": "vitest watch",
-    "prepare": "husky",
-    "release": "npm run build && changeset publish"
-  },
-  "dependencies": {
-    "comlink": "4.4.2",
-    "rxjs": "7.8.2"
+    "test": "npm run test -w packages/bridge",
+    "test:watch": "npm run test:watch -w packages/bridge",
+    "changeset": "changeset",
+    "release": "npm run build && changeset publish",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
-    "@react-rxjs/core": "^0.10.8",
-    "@types/lodash": "4.17.20",
-    "@types/node": "^24.6.0",
-    "@types/react": "19.1.10",
-    "@types/react-dom": "19.1.7",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
-    "@vitejs/plugin-react-swc": "4.0.0",
-    "@vitest/browser": "^3.2.4",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^6.1.0",
     "globals": "^16.4.0",
-    "happy-dom": "^19.0.2",
     "husky": "^9.1.7",
-    "lodash": "^4.17.21",
-    "prettier": "^3.6.2",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-rxjs": "^2.0.8",
-    "tsdown": "^0.15.6",
-    "typescript": "5.8.3",
-    "vite": "7.1.2",
-    "vitest": "^3.2.4"
+    "prettier": "^3.6.2"
   }
 }

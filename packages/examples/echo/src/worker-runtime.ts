@@ -1,3 +1,3 @@
-import { createSharedWorkerRuntime } from "../../../src/runtime";
+import { createSharedWorkerRuntime } from "@grancalavera/bridge";
 import { echoWorker } from "./worker";
 createSharedWorkerRuntime(echoWorker);

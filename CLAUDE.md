@@ -1,13 +1,50 @@
 # Bridge Repository - Agent Guidelines
 
+## Project Structure
+
+This is a monorepo using npm workspaces with two packages:
+
+```
+bridge/
+├── packages/
+│   ├── bridge/          # The library package (@grancalavera/bridge)
+│   │   ├── src/
+│   │   ├── tests/
+│   │   ├── dist/        # Build output
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── tsdown.config.ts
+│   │   └── vitest.config.ts
+│   └── examples/        # Demo applications (@grancalavera/bridge-examples)
+│       ├── echo/
+│       ├── user-profile/
+│       ├── index.html   # Examples index
+│       ├── index.tsx     # Examples index React app
+│       ├── styles.css   # Shared reset styles
+│       ├── examples.css # Examples index styles
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── vite.config.ts
+├── .changeset/
+├── .github/workflows/
+├── .husky/
+├── eslint.config.js
+├── tsconfig.json        # Base TypeScript config
+├── package.json         # Root workspace configuration
+└── ...
+```
+
 ## Build & Development Commands
 
-- **Development**: `npm run dev` - Start Vite dev server with hot reload
-- **Build**: `npm run build` - TypeScript check + production build
-- **Build Library**: `npm run build:lib` - Build library package to `dist/` using tsdown
-- **Type Check**: `npm run typecheck` - Run TypeScript compiler without emitting
-- **Preview**: `npm run preview` - Preview production build locally
-- **Test**: `npm test` - Run Vitest test suite (to be implemented)
+- **Development**: `npm run dev` - Start Vite dev server for examples
+- **Build**: `npm run build` - TypeScript check + build library to `packages/bridge/dist/`
+- **Build Examples**: `npm run build:examples` - Build example applications
+- **Type Check**: `npm run typecheck` - Type-check the library package
+- **Type Check Examples**: `npm run typecheck:examples` - Type-check the examples package
+- **Test**: `npm test` - Run Vitest test suite for the library
+- **Test Watch**: `npm run test:watch` - Run tests in watch mode
+- **Lint**: `npm run lint` - Run ESLint across the entire repo
+- **Format**: `npm run format` - Format code with Prettier
 
 ## Versioning & Changelog
 
@@ -43,6 +80,7 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 - Changesets are stored as `.changeset/*.md` files
 - The highest bump type across all changesets determines the final version bump
 - Configuration in `.changeset/config.json`
+- The examples package (`@grancalavera/bridge-examples`) is ignored by changesets
 
 ## Code Style & Conventions
 
@@ -55,7 +93,7 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 - **Naming**: camelCase for functions/variables, PascalCase for types/components
 - **Async**: Prefer async/await over raw promises, use `Promise.withResolvers()`
 - **Error Handling**: Always handle async errors, use try-catch blocks
-- **File Structure**: Organize by feature in `src/shared-worker/[feature]/`
+- **File Structure**: Library code in `packages/bridge/src/`, examples in `packages/examples/`
 - **Linting & Formatting**:
   - ESLint configured with TypeScript and React plugins
   - Prettier with default settings (double quotes, 2 spaces, semicolons)
@@ -79,37 +117,38 @@ Bridge is a library to simplify communication and state sharing between differen
 
 ## Examples
 
-- The examples for this project live in the `examples` directory.
+- The examples for this project live in the `packages/examples` directory.
 - Each example is its own React application with the following structure:
-  - `examples/{example-name}/src/main.tsx` - Entry point
-  - `examples/{example-name}/src/App.tsx` - Root component
-  - `examples/{example-name}/index.html` - HTML template
-  - `examples/{example-name}/README.md` - Example documentation
-  - All other example files go directly under `examples/{example-name}/src/`
-- There is a single shared stylesheet at `examples/styles.css` can be imported by all examples
-- There's a single top level `vite.config.ts` file
-- Example entries are generated dynamically in `vite.config.ts` and added to `build.rollupOptions.input`
+  - `packages/examples/{example-name}/src/main.tsx` - Entry point
+  - `packages/examples/{example-name}/src/App.tsx` - Root component
+  - `packages/examples/{example-name}/index.html` - HTML template
+  - `packages/examples/{example-name}/README.md` - Example documentation
+  - All other example files go directly under `packages/examples/{example-name}/src/`
+- Examples import from `@grancalavera/bridge` as a workspace dependency
+- There is a shared reset stylesheet at `packages/examples/styles.css` imported by all examples
+- Vite config is at `packages/examples/vite.config.ts`
+- Example entries are generated dynamically in the Vite config and added to `build.rollupOptions.input`
 - All examples are listed at `/` in runtime. The examples index is produced dynamically as new examples are added.
 
 ## Testing Strategy
 
-**Framework**: Vitest (to be installed)
+**Framework**: Vitest
 
 ### Test Structure
 
-- **Unit Tests** (`src/**/*.test.ts`) - Test individual library functions
+- **Unit Tests** (`packages/bridge/src/**/*.test.ts`) - Test individual library functions
   - Type system validation (Contract, Query, Mutation, Subscription types)
   - Client creation and proxy generation logic
   - Worker context helpers (notify, subscribe)
   - Structured cloneable type constraints
 
-- **Integration Tests** (`tests/integration/**/*.test.ts`) - Test library from `dist/`
+- **Integration Tests** (`packages/bridge/tests/integration/**/*.test.ts`) - Test library from `dist/`
   - Import from `dist/index.js` (ESM) and `dist/index.cjs` (CJS)
   - Verify all public exports are accessible
   - Test SharedWorker communication patterns end-to-end
   - Validate RxJS subscription lifecycle
 
-- **Build Artifact Tests** (`tests/build/**/*.test.ts`) - Verify build output
+- **Build Artifact Tests** (`packages/bridge/tests/build/**/*.test.ts`) - Verify build output
   - Check source maps (`index.js.map`, `index.cjs.map`) are valid
   - Verify type declarations (`index.d.ts`, `index.d.cts`) are correct
   - Test declaration maps (`index.d.ts.map`, `index.d.cts.map`) resolve to source
@@ -124,8 +163,6 @@ Bridge is a library to simplify communication and state sharing between differen
 ### Running Tests
 
 - `npm test` - Run all tests
-- `npm run test:unit` - Run unit tests only
-- `npm run test:integration` - Run integration tests (requires built library)
 - `npm run test:watch` - Run tests in watch mode
 - Tests should run automatically before publishing the package
 
@@ -133,18 +170,18 @@ Bridge is a library to simplify communication and state sharing between differen
 
 After making changes to the library, smoke test the examples with the dev server (`npm run dev`) and a browser:
 
-1. **Echo Example** (`/examples/echo/`)
+1. **Echo Example** (`/echo/`)
    - Click "Send Echo" — verify a response appears with a client ID and message
    - Click "Subscribe" — verify "Waiting for messages..." appears
    - Click "Send Echo" again — verify the subscription receives the message
-   - Open a **second tab** to `/examples/echo/`
+   - Open a **second tab** to `/echo/`
    - In tab 2, click "Send Echo" — switch to tab 1 and verify the subscription received the cross-tab message
 
-2. **User Profile Example** (`/examples/user-profile/`)
+2. **User Profile Example** (`/user-profile/`)
    - Click "Get User 1" — verify user details (name, email, age) appear
    - Click "Watch User 1" — verify the watch section appears with user data
    - Select "User 1" in the update dropdown, fill in a new name, click "Update User" — verify the watch section updates
-   - Open a **second tab** to `/examples/user-profile/`
+   - Open a **second tab** to `/user-profile/`
    - In tab 1, click "Watch User 1"
    - In tab 2, select User 1, update the name, click "Update User"
    - Switch to tab 1 — verify the watch section shows the name updated from tab 2
