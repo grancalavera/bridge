@@ -9,6 +9,7 @@ interface ClientRep {
   subscriptions: Subscription;
 }
 
+/** Creates a new {@link ClientRep} with an empty subscription container. */
 const createClientRep = (clientId: string): ClientRep => ({
   clientId,
   subscriptions: new Subscription(),
@@ -25,6 +26,17 @@ export type WorkerContext = {
   clients: ClientRepMap;
 };
 
+/**
+ * Creates a `subscribe` function bound to the shared clients map.
+ *
+ * The returned function subscribes to `source$`, materializes notifications,
+ * and forwards them to `onNotification`. The subscription is tracked under
+ * the given client so it is automatically cleaned up when the client
+ * disconnects.
+ *
+ * @returns A Comlink-proxied unsubscribe function the caller can invoke to
+ *          cancel the subscription early.
+ */
 const subscribe =
   (clients: ClientRepMap) =>
   <T>(
@@ -47,6 +59,16 @@ const subscribe =
     });
   };
 
+/**
+ * Creates a reusable worker factory backed by a shared clients map.
+ *
+ * Each call to the returned function invokes `factory` with a
+ * {@link WorkerContext} that shares the same `clients` map and `subscribe`
+ * helper, so multiple factories can cooperate over a single set of clients.
+ *
+ * @param clients - Optional pre-existing clients map. A new map is created
+ *                  when omitted.
+ */
 export const createWorkerFactory =
   (clients: ClientRepMap = new Map()) =>
   <T extends Operations>(
@@ -61,6 +83,14 @@ export type WorkerFactory<T extends Operations> = (
   context: WorkerContext,
 ) => WorkerContract<T>;
 
+/**
+ * Built-in factory that implements the client registry.
+ *
+ * Provides `registerClient`, which adds the client to the shared clients map
+ * and acquires a `navigator.locks` Web Lock keyed by `clientId`. When the
+ * tab closes and the lock is released, all of the client's subscriptions are
+ * unsubscribed and the client is removed from the map.
+ */
 export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
   context,
 ) => {
@@ -86,6 +116,17 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
   };
 };
 
+/**
+ * Creates a complete SharedWorker object by composing a user-provided factory
+ * with the built-in {@link registryWorkerFactory}.
+ *
+ * Internally calls {@link createWorkerFactory} once to create a single shared
+ * clients map, then invokes both `factory` and `registryWorkerFactory` with
+ * the same {@link WorkerContext}, merging the results into one worker object.
+ *
+ * @param factory - A factory function that receives a {@link WorkerContext}
+ *                  and returns the application-specific worker operations.
+ */
 export const createWorker = <T extends Operations>(
   factory: WorkerFactory<T>,
 ): WorkerContract<T> & WorkerContract<RegistryContract> => {

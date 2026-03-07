@@ -14,6 +14,14 @@ export interface CreateClientOptions {
   clientId?: string;
 }
 
+/**
+ * Registers a client with the SharedWorker.
+ *
+ * Acquires a `navigator.locks` Web Lock keyed by `clientId` and calls
+ * `registerClient` on the worker through the given port. The lock is held
+ * with an unresolved promise so it persists for the lifetime of the tab,
+ * allowing the worker to detect when the tab closes.
+ */
 const registerClient = async (
   port: MessagePort,
   clientId: string,
@@ -30,6 +38,12 @@ const registerClient = async (
   return registration.promise;
 };
 
+/**
+ * Creates a proxy around the worker that auto-prepends `clientId` to every
+ * method call. Function arguments are wrapped with `Comlink.proxy` so
+ * callbacks (e.g. subscription notification handlers) can cross the
+ * worker boundary.
+ */
 const deriveClient = <T extends Operations>(
   port: MessagePort,
   clientId: string,
@@ -56,6 +70,17 @@ const deriveClient = <T extends Operations>(
   return clientProxy;
 };
 
+/**
+ * Connects to a SharedWorker and returns a typed client proxy paired with a
+ * subscription helper.
+ *
+ * Generates a random `clientId` (or uses the one provided), registers the
+ * client with the worker, and returns a tuple of:
+ * 1. A proxy that forwards every call to the worker with `clientId`
+ *    prepended automatically.
+ * 2. A `subscriptions` function for creating RxJS Observables from the
+ *    worker's subscription-based operations.
+ */
 export const createClient = <T extends Operations>({
   sharedWorker,
   clientId = crypto.randomUUID(),
