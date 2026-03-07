@@ -1,18 +1,77 @@
 import * as Comlink from "comlink";
+import { Observable, Subject, type ObservableNotification } from "rxjs";
+import { dematerialize } from "rxjs/operators";
 import type { RegistryContract } from "./contract";
-import {
-  subscriptions,
-  wrapWorkerPort,
-  type Operations,
-  type SubscriptionKey,
-  type SubscriptionInput,
+import type {
+  Operations,
+  SubscriptionInput,
+  SubscriptionKey,
+  WorkerContract,
 } from "./model";
+
+/**
+ * Creates a Comlink remote proxy for the given worker contract using the provided MessagePort.
+ * @param port The MessagePort to communicate with the worker.
+ * @returns A Comlink remote proxy for the worker contract.
+ */
+export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
+  Comlink.wrap<WorkerContract<T>>(port);
+
+export const subscriptions = <T extends Operations>(client: T) => {
+  function subscribe<K extends SubscriptionKey<T>>(
+    key: K,
+    ...args: SubscriptionInput<T, K> extends void
+      ? []
+      : [input: SubscriptionInput<T, K>]
+  ) {
+    type U = T[K] extends (
+      onNotification: (
+        notification: ObservableNotification<infer Update>,
+      ) => void,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...args: any[]
+    ) => Promise<() => void>
+      ? Update
+      : never;
+
+    return new Observable<U>((subscriber) => {
+      const subscription = client[key] as unknown as (
+        onNotification: (notification: ObservableNotification<U>) => void,
+        ...args: SubscriptionInput<T, K> extends void
+          ? []
+          : [input: SubscriptionInput<T, K>]
+      ) => Promise<() => void>;
+
+      const notifications$ = new Subject<ObservableNotification<U>>();
+      const sub = notifications$.pipe(dematerialize()).subscribe(subscriber);
+      const onNotification = (n: ObservableNotification<U>) =>
+        notifications$.next(n);
+
+      const unsubscribePromise = subscription(onNotification, ...args);
+
+      return () => {
+        sub.unsubscribe();
+        notifications$.complete();
+        unsubscribePromise.then((f) => f());
+      };
+    });
+  }
+  return subscribe;
+};
 
 export interface CreateClientOptions {
   sharedWorker: SharedWorker;
   clientId?: string;
 }
 
+/**
+ * Registers a client with the SharedWorker.
+ *
+ * Acquires a `navigator.locks` Web Lock keyed by `clientId` and calls
+ * `registerClient` on the worker through the given port. The lock is held
+ * with an unresolved promise so it persists for the lifetime of the tab,
+ * allowing the worker to detect when the tab closes.
+ */
 const registerClient = async (
   port: MessagePort,
   clientId: string,
@@ -29,6 +88,12 @@ const registerClient = async (
   return registration.promise;
 };
 
+/**
+ * Creates a proxy around the worker that auto-prepends `clientId` to every
+ * method call. Function arguments are wrapped with `Comlink.proxy` so
+ * callbacks (e.g. subscription notification handlers) can cross the
+ * worker boundary.
+ */
 const deriveClient = <T extends Operations>(
   port: MessagePort,
   clientId: string,
@@ -55,6 +120,17 @@ const deriveClient = <T extends Operations>(
   return clientProxy;
 };
 
+/**
+ * Connects to a SharedWorker and returns a typed client proxy paired with a
+ * subscription helper.
+ *
+ * Generates a random `clientId` (or uses the one provided), registers the
+ * client with the worker, and returns a tuple of:
+ * 1. A proxy that forwards every call to the worker with `clientId`
+ *    prepended automatically.
+ * 2. A `subscriptions` function for creating RxJS Observables from the
+ *    worker's subscription-based operations.
+ */
 export const createClient = <T extends Operations>({
   sharedWorker,
   clientId = crypto.randomUUID(),
@@ -65,9 +141,11 @@ export const createClient = <T extends Operations>({
     ...args: SubscriptionInput<T, K> extends void
       ? []
       : [input: SubscriptionInput<T, K>]
-  ) => import("rxjs").Observable<
+  ) => Observable<
     T[K] extends (
-      onNext: (value: infer Update) => void,
+      onNotification: (
+        notification: ObservableNotification<infer Update>,
+      ) => void,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...args: any[]
     ) => Promise<() => void>

@@ -10,7 +10,7 @@ export type { WorkerContext, WorkerFactory } from "./worker.ts";
 
 export { createSharedWorkerRuntime } from "./runtime.ts";
 
-export { wrapWorkerPort, subscriptions } from "./model.ts";
+export { wrapWorkerPort, subscriptions } from "./client.ts";
 export type {
   Contract,
   Operation,
