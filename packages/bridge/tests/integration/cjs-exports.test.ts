@@ -23,11 +23,5 @@ describe("CJS Exports", () => {
 
     expect(module.createSharedWorkerRuntime).toBeDefined();
     expect(typeof module.createSharedWorkerRuntime).toBe("function");
-
-    expect(module.wrapWorkerPort).toBeDefined();
-    expect(typeof module.wrapWorkerPort).toBe("function");
-
-    expect(module.subscriptions).toBeDefined();
-    expect(typeof module.subscriptions).toBe("function");
   });
 });

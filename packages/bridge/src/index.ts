@@ -10,7 +10,6 @@ export type {
 
 export { createSharedWorkerRuntime } from "./runtime.ts";
 
-export { wrapWorkerPort, subscriptions } from "./client.ts";
 export type {
   Contract,
   Operation,

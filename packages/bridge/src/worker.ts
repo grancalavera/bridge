@@ -4,18 +4,18 @@ import { materialize } from "rxjs/operators";
 import type { RegistryContract } from "./contract";
 import type { Operations, ProxyMarkedFunction, WorkerContract } from "./model";
 
-interface ClientRep {
+export interface ClientRep {
   clientId: string;
   subscriptions: Subscription;
 }
 
 /** Creates a new {@link ClientRep} with an empty subscription container. */
-const createClientRep = (clientId: string): ClientRep => ({
+export const createClientRep = (clientId: string): ClientRep => ({
   clientId,
   subscriptions: new Subscription(),
 });
 
-type ClientRepMap = Map<string, ClientRep>;
+export type ClientRepMap = Map<string, ClientRep>;
 
 /**
  * Context passed to worker factory functions.
@@ -44,7 +44,7 @@ export type WorkerContext = {
  * @returns A Comlink-proxied unsubscribe function the caller can invoke to
  *          cancel the subscription early.
  */
-const subscribe =
+export const subscribe =
   (clients: ClientRepMap) =>
   <T>(
     source$: Observable<T>,
@@ -81,10 +81,12 @@ export const createWorkerFactory =
   <T extends Operations>(
     factory: (context: WorkerContext) => WorkerContract<T>,
   ): WorkerContract<T> =>
-    factory({
-      subscribe: subscribe(clients),
-      clients,
-    });
+    factory(
+      Object.freeze({
+        subscribe: subscribe(clients),
+        clients,
+      }),
+    );
 
 /**
  * A factory function that receives a {@link WorkerContext} and returns a
