@@ -1,19 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { of, Subject, Subscription, type ObservableNotification } from "rxjs";
+import { of, Subject, type ObservableNotification } from "rxjs";
 import {
   createClientRep,
   createWorkerFactory,
   registryWorkerFactory,
   createWorker,
+  type ClientRepMap,
   type WorkerContext,
 } from "./worker";
 
 vi.mock("comlink", () => ({
   proxy: (fn: unknown) => fn,
 }));
-
-type ClientRep = { clientId: string; subscriptions: Subscription };
-type ClientRepMap = Map<string, ClientRep>;
 
 describe("subscribe", () => {
   let clients: ClientRepMap;

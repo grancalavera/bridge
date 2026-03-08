@@ -4,7 +4,7 @@ import { materialize } from "rxjs/operators";
 import type { RegistryContract } from "./contract";
 import type { Operations, ProxyMarkedFunction, WorkerContract } from "./model";
 
-interface ClientRep {
+export interface ClientRep {
   clientId: string;
   subscriptions: Subscription;
 }
@@ -15,7 +15,7 @@ export const createClientRep = (clientId: string): ClientRep => ({
   subscriptions: new Subscription(),
 });
 
-type ClientRepMap = Map<string, ClientRep>;
+export type ClientRepMap = Map<string, ClientRep>;
 
 /**
  * Context passed to worker factory functions.
