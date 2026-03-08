@@ -1,3 +1,3 @@
 import { createSharedWorkerRuntime } from "@grancalavera/bridge";
-import { userProfileWorker } from "./worker";
-createSharedWorkerRuntime(userProfileWorker);
+import { userProfileFactory } from "./worker";
+createSharedWorkerRuntime(userProfileFactory);

@@ -1,8 +1,12 @@
 export { createClient } from "./client.ts";
 export type { CreateClientOptions } from "./client.ts";
 
-export { createWorker } from "./worker.ts";
-export type { WorkerContext, WorkerFactory } from "./worker.ts";
+export { createWorkerFactory, registryWorkerFactory } from "./worker.ts";
+export type {
+  AnyWorkerFactory,
+  WorkerContext,
+  WorkerFactory,
+} from "./worker.ts";
 
 export { createSharedWorkerRuntime } from "./runtime.ts";
 

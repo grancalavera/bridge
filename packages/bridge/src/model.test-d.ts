@@ -7,7 +7,7 @@ import {
   ProxyMarkedFunction,
   Subscription,
 } from "./model";
-import { createWorker } from "./worker";
+import { createWorkerFactory } from "./worker";
 
 type TheContract = Contract<{
   operationWithoutInput: Operation<string, void>;
@@ -16,7 +16,8 @@ type TheContract = Contract<{
   subscriptionWithInput: Subscription<string, string>;
 }>;
 
-const worker = createWorker<TheContract>(() => ({
+const create = createWorkerFactory();
+const worker = create<TheContract>(() => ({
   operationWithoutInput: async () => "",
   operationWithInput: async (input: string) => input,
   subscriptionWithoutInput: async () => Comlink.proxy(() => {}),

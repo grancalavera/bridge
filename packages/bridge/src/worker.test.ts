@@ -2,10 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   createWorkerFactory,
   registryWorkerFactory,
-  createWorker,
+  type AnyWorkerFactory,
   type ClientRepMap,
   type WorkerContext,
 } from "./worker";
+import { composeFactories } from "./runtime";
 
 vi.mock("comlink", () => ({
   proxy: (fn: unknown) => fn,
@@ -161,7 +162,7 @@ describe("registryWorkerFactory", () => {
   });
 });
 
-describe("createWorker", () => {
+describe("composeFactories", () => {
   let lockCallbacks: Map<string, () => Promise<void>>;
 
   beforeEach(() => {
@@ -181,38 +182,78 @@ describe("createWorker", () => {
     vi.unstubAllGlobals();
   });
 
-  it("merges user factory and registry into one object", () => {
-    const worker = createWorker(() => ({
+  it("composes a single factory with registry", () => {
+    const echoFactory: AnyWorkerFactory = () => ({
       echo: async (_clientId: string) => "hello",
-    }));
+    });
+
+    const worker = composeFactories(echoFactory);
 
     expect(typeof worker.echo).toBe("function");
     expect(typeof worker.registerClient).toBe("function");
   });
 
-  it("throws when user factory defines registerClient", () => {
-    expect(() =>
-      createWorker(() => ({
-        registerClient: async (_clientId: string) => {},
-      })),
-    ).toThrow('"registerClient" is a reserved operation key');
-  });
-
-  it("both factories share the same clients map", async () => {
-    let factoryClients: ClientRepMap | undefined;
-
-    const worker = createWorker((context) => {
-      factoryClients = context.clients;
-      return {
-        getClientCount: async () => factoryClients!.size,
-      };
+  it("composes multiple factories into one worker", () => {
+    const factoryA: AnyWorkerFactory = () => ({
+      echo: async (_clientId: string) => "hello",
+    });
+    const factoryB: AnyWorkerFactory = () => ({
+      greet: async (_clientId: string) => "hi",
     });
 
-    // Register a client through the registry side
-    await worker.registerClient("c1");
+    const worker = composeFactories(factoryA, factoryB);
 
-    // The user factory should see the same client
-    const count = await worker.getClientCount("ignored");
-    expect(count).toBe(1);
+    expect(typeof worker.echo).toBe("function");
+    expect(typeof worker.greet).toBe("function");
+    expect(typeof worker.registerClient).toBe("function");
+  });
+
+  it("all factories share the same clients map", async () => {
+    let clientsA: ClientRepMap | undefined;
+    let clientsB: ClientRepMap | undefined;
+
+    const factoryA: AnyWorkerFactory = (context) => {
+      clientsA = context.clients;
+      return {
+        opA: async (_clientId: string) => clientsA!.size,
+      };
+    };
+    const factoryB: AnyWorkerFactory = (context) => {
+      clientsB = context.clients;
+      return {
+        opB: async (_clientId: string) => clientsB!.size,
+      };
+    };
+
+    const worker = composeFactories(factoryA, factoryB);
+
+    expect(clientsA).toBe(clientsB);
+
+    // Register a client through the registry and verify both factories see it
+    await (worker.registerClient as (id: string) => Promise<void>)("c1");
+    expect(clientsA!.size).toBe(1);
+  });
+
+  it("throws on duplicate operation keys across factories", () => {
+    const factoryA: AnyWorkerFactory = () => ({
+      echo: async (_clientId: string) => "hello",
+    });
+    const factoryB: AnyWorkerFactory = () => ({
+      echo: async (_clientId: string) => "world",
+    });
+
+    expect(() => composeFactories(factoryA, factoryB)).toThrow(
+      'Duplicate operation key "echo" across composed factories',
+    );
+  });
+
+  it("throws when a factory defines registerClient", () => {
+    const badFactory: AnyWorkerFactory = () => ({
+      registerClient: async (_clientId: string) => {},
+    });
+
+    expect(() => composeFactories(badFactory)).toThrow(
+      '"registerClient" is a reserved operation key',
+    );
   });
 });
