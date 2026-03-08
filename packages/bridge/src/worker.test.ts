@@ -27,6 +27,18 @@ describe("createWorkerFactory", () => {
     expect(typeof receivedContext!.subscribe).toBe("function");
   });
 
+  it("freezes the context object", () => {
+    const create = createWorkerFactory();
+    let receivedContext: WorkerContext | undefined;
+
+    create((context) => {
+      receivedContext = context;
+      return {};
+    });
+
+    expect(Object.isFrozen(receivedContext)).toBe(true);
+  });
+
   it("multiple factories share the same clients map", () => {
     const create = createWorkerFactory();
     const contexts: WorkerContext[] = [];

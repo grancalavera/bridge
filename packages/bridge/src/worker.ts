@@ -81,10 +81,12 @@ export const createWorkerFactory =
   <T extends Operations>(
     factory: (context: WorkerContext) => WorkerContract<T>,
   ): WorkerContract<T> =>
-    factory({
-      subscribe: subscribe(clients),
-      clients,
-    });
+    factory(
+      Object.freeze({
+        subscribe: subscribe(clients),
+        clients,
+      }),
+    );
 
 /**
  * A factory function that receives a {@link WorkerContext} and returns a
