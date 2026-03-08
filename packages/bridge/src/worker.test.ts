@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { of, Subject, Subscription, type ObservableNotification } from "rxjs";
 import {
   createWorkerFactory,
@@ -164,6 +164,11 @@ describe("registryWorkerFactory", () => {
     });
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   const createRegistry = () => {
     const create = createWorkerFactory(clients);
     return create(registryWorkerFactory);
@@ -220,7 +225,6 @@ describe("registryWorkerFactory", () => {
     expect(warnSpy).toHaveBeenCalledWith(
       "Attempted to unregister unknown client c1",
     );
-    warnSpy.mockRestore();
   });
 });
 
@@ -238,6 +242,10 @@ describe("createWorker", () => {
         }),
       },
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("merges user factory and registry into one object", () => {
