@@ -37,13 +37,6 @@ describe("SharedWorker Communication", () => {
     expect(typeof createSharedWorkerRuntime).toBe("function");
   });
 
-  it("should import wrapWorkerPort from dist/index.js", async () => {
-    const { wrapWorkerPort } = await import("../../dist/index.js");
-
-    expect(wrapWorkerPort).toBeDefined();
-    expect(typeof wrapWorkerPort).toBe("function");
-  });
-
   it("should validate contract types are accessible", () => {
     const contractShape: TestContract = {} as TestContract;
 

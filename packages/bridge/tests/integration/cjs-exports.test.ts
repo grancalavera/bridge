@@ -18,19 +18,7 @@ describe("CJS Exports", () => {
     expect(module.createWorker).toBeDefined();
     expect(typeof module.createWorker).toBe("function");
 
-    expect(module.createWorkerFactory).toBeDefined();
-    expect(typeof module.createWorkerFactory).toBe("function");
-
-    expect(module.registryWorkerFactory).toBeDefined();
-    expect(typeof module.registryWorkerFactory).toBe("function");
-
     expect(module.createSharedWorkerRuntime).toBeDefined();
     expect(typeof module.createSharedWorkerRuntime).toBe("function");
-
-    expect(module.wrapWorkerPort).toBeDefined();
-    expect(typeof module.wrapWorkerPort).toBe("function");
-
-    expect(module.subscriptions).toBeDefined();
-    expect(typeof module.subscriptions).toBe("function");
   });
 });
