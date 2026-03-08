@@ -18,11 +18,8 @@ export const echoWorker = createWorker<EchoContract>(({ subscribe }) => {
     },
     async subscribeEcho(clientId, onNotification, input) {
       const timestamp = input?.timestamp;
-      return subscribe(
-        timestamp ? echoWithTimestamp$ : echo$,
-        clientId,
-        onNotification,
-      );
+      const source$ = timestamp ? echoWithTimestamp$ : echo$;
+      return subscribe(source$, clientId, onNotification);
     },
   };
 });

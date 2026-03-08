@@ -142,5 +142,11 @@ export const createWorker = <T extends Operations>(
   factory: WorkerFactory<T>,
 ): WorkerContract<T> & WorkerContract<RegistryContract> => {
   const create = createWorkerFactory();
-  return { ...create(factory), ...create(registryWorkerFactory) };
+  const userContract = create(factory);
+
+  if ("registerClient" in userContract) {
+    throw new Error('"registerClient" is a reserved operation key');
+  }
+
+  return { ...userContract, ...create(registryWorkerFactory) };
 };
