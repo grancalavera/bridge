@@ -10,7 +10,7 @@ interface ClientRep {
 }
 
 /** Creates a new {@link ClientRep} with an empty subscription container. */
-const createClientRep = (clientId: string): ClientRep => ({
+export const createClientRep = (clientId: string): ClientRep => ({
   clientId,
   subscriptions: new Subscription(),
 });
