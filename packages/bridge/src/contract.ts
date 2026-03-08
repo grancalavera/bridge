@@ -7,7 +7,7 @@ import type { Contract, Operation } from "./model";
  * and cleanup are fundamental to the SharedWorker lifecycle — without
  * them, subscriptions would leak when tabs close.
  *
- * Every SharedWorker created with {@link createWorker} automatically
+ * Every SharedWorker created with {@link createSharedWorkerRuntime} automatically
  * includes this contract so that clients can register themselves and
  * have their subscriptions cleaned up on disconnect.
  */

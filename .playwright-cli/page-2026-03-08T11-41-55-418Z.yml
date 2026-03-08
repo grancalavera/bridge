@@ -1,0 +1,53 @@
+- generic [ref=e3]:
+    - heading "User Profile Demo" [level=3] [ref=e4]
+    - paragraph [ref=e5]:
+        - text: This example demonstrates operations with
+        - strong [ref=e6]: required
+        - text: inputs.
+    - paragraph [ref=e7]:
+        - link "Home" [ref=e8] [cursor=pointer]:
+            - /url: /
+    - generic [ref=e9]:
+        - heading "Query User (with required input)" [level=4] [ref=e10]
+        - generic [ref=e11]:
+            - button "Get User 1" [ref=e12]
+            - button "Get User 2" [ref=e13]
+            - button "Get User 3" [ref=e14]
+        - generic [ref=e26]:
+            - paragraph [ref=e27]:
+                - strong [ref=e28]: "Name:"
+                - text: Alice Johnson
+            - paragraph [ref=e29]:
+                - strong [ref=e30]: "Email:"
+                - text: alice@example.com
+            - paragraph [ref=e31]:
+                - strong [ref=e32]: "Age:"
+                - text: "28"
+    - generic [ref=e15]:
+        - heading "Update User (with required input)" [level=4] [ref=e16]
+        - combobox [ref=e18]:
+            - option "Select a user"
+            - option "User 1" [selected]
+            - option "User 2"
+            - option "User 3"
+        - generic [ref=e33]:
+            - textbox "New name" [ref=e34]
+            - textbox "New email" [ref=e35]
+            - button "Update User" [ref=e36]
+    - generic [ref=e19]:
+        - heading "Watch User (subscription with required input)" [level=4] [ref=e20]
+        - generic [ref=e21]:
+            - button "Watch User 1" [active] [ref=e22]
+            - button "Watch User 2" [ref=e23]
+            - button "Watch User 3" [ref=e24]
+            - button "Unwatch" [ref=e25]
+        - generic [ref=e37]:
+            - paragraph [ref=e38]:
+                - strong [ref=e39]: "Name:"
+                - text: Unknown User (watched by 5403737b-ae50-42d9-a773-f2ed2b1004ed)
+            - paragraph [ref=e40]:
+                - strong [ref=e41]: "Email:"
+                - text: unknown@example.com
+            - paragraph [ref=e42]:
+                - strong [ref=e43]: "Age:"
+                - text: "0"

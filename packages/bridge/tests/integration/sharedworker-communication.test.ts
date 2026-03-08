@@ -8,11 +8,10 @@ type TestContract = Contract<{
 
 describe("SharedWorker Communication", () => {
   beforeAll(async () => {
-    const { createClient, createWorker, createSharedWorkerRuntime } =
+    const { createClient, createSharedWorkerRuntime } =
       await import("../../dist/index.js");
 
     expect(createClient).toBeDefined();
-    expect(createWorker).toBeDefined();
     expect(createSharedWorkerRuntime).toBeDefined();
   });
 
@@ -21,13 +20,6 @@ describe("SharedWorker Communication", () => {
 
     expect(createClient).toBeDefined();
     expect(typeof createClient).toBe("function");
-  });
-
-  it("should import createWorker from dist/index.js", async () => {
-    const { createWorker } = await import("../../dist/index.js");
-
-    expect(createWorker).toBeDefined();
-    expect(typeof createWorker).toBe("function");
   });
 
   it("should import createSharedWorkerRuntime from dist/index.js", async () => {

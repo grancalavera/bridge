@@ -1,8 +1,8 @@
 import { map, share, Subject } from "rxjs";
-import { createWorker } from "@grancalavera/bridge";
+import type { WorkerFactory } from "@grancalavera/bridge";
 import type { EchoContract } from "./contract";
 
-export const echoWorker = createWorker<EchoContract>(({ subscribe }) => {
+export const echoFactory: WorkerFactory<EchoContract> = ({ subscribe }) => {
   const echo$ = new Subject<string>();
 
   const echoWithTimestamp$ = echo$.pipe(
@@ -22,4 +22,4 @@ export const echoWorker = createWorker<EchoContract>(({ subscribe }) => {
       return subscribe(source$, clientId, onNotification);
     },
   };
-});
+};

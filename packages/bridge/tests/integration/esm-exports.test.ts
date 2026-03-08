@@ -7,9 +7,6 @@ describe("ESM Exports", () => {
     expect(module.createClient).toBeDefined();
     expect(typeof module.createClient).toBe("function");
 
-    expect(module.createWorker).toBeDefined();
-    expect(typeof module.createWorker).toBe("function");
-
     expect(module.createWorkerFactory).toBeDefined();
     expect(typeof module.createWorkerFactory).toBe("function");
 

@@ -89,10 +89,23 @@ export const createWorkerFactory =
 /**
  * A factory function that receives a {@link WorkerContext} and returns a
  * worker contract implementing the operations defined by `T`.
+ *
+ * If `T` includes `registerClient`, the type resolves to `never` because
+ * `registerClient` is a reserved operation key managed by the library.
  */
-export type WorkerFactory<T extends Operations> = (
-  context: WorkerContext,
-) => WorkerContract<T>;
+export type WorkerFactory<T extends Operations> =
+  "registerClient" extends keyof T
+    ? never
+    : (context: WorkerContext) => WorkerContract<T>;
+
+/**
+ * An unconstrained worker factory type used internally. Unlike
+ * {@link WorkerFactory}, this type does not reject `registerClient` —
+ * it is used by {@link composeFactories} and for the built-in
+ * {@link registryWorkerFactory}.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyWorkerFactory = (context: WorkerContext) => Record<string, any>;
 
 /**
  * Built-in factory that implements the client registry.
@@ -102,9 +115,9 @@ export type WorkerFactory<T extends Operations> = (
  * tab closes and the lock is released, all of the client's subscriptions are
  * unsubscribed and the client is removed from the map.
  */
-export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
-  context,
-) => {
+export const registryWorkerFactory: (
+  context: WorkerContext,
+) => WorkerContract<RegistryContract> = (context) => {
   const { clients } = context;
   return {
     async registerClient(clientId) {
@@ -125,28 +138,4 @@ export const registryWorkerFactory: WorkerFactory<RegistryContract> = (
       });
     },
   };
-};
-
-/**
- * Creates a complete SharedWorker object by composing a user-provided factory
- * with the built-in {@link registryWorkerFactory}.
- *
- * Internally calls {@link createWorkerFactory} once to create a single shared
- * clients map, then invokes both `factory` and `registryWorkerFactory` with
- * the same {@link WorkerContext}, merging the results into one worker object.
- *
- * @param factory - A factory function that receives a {@link WorkerContext}
- *                  and returns the application-specific worker operations.
- */
-export const createWorker = <T extends Operations>(
-  factory: WorkerFactory<T>,
-): WorkerContract<T> & WorkerContract<RegistryContract> => {
-  const create = createWorkerFactory();
-  const userContract = create(factory);
-
-  if ("registerClient" in userContract) {
-    throw new Error('"registerClient" is a reserved operation key');
-  }
-
-  return { ...userContract, ...create(registryWorkerFactory) };
 };
