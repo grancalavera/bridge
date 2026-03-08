@@ -44,7 +44,7 @@ export type WorkerContext = {
  * @returns A Comlink-proxied unsubscribe function the caller can invoke to
  *          cancel the subscription early.
  */
-const subscribe =
+export const subscribe =
   (clients: ClientRepMap) =>
   <T>(
     source$: Observable<T>,
