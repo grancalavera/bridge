@@ -10,14 +10,6 @@ import type {
 } from "./model";
 
 /**
- * Creates a Comlink remote proxy for the given worker contract using the provided MessagePort.
- * @param port The MessagePort to communicate with the worker.
- * @returns A Comlink remote proxy for the worker contract.
- */
-export const wrapWorkerPort = <T extends Operations>(port: MessagePort) =>
-  Comlink.wrap<WorkerContract<T>>(port);
-
-/**
  * Creates a subscription helper for the given client proxy.
  *
  * Returns a function that, given a subscription key and optional input,
@@ -91,7 +83,7 @@ const registerClient = async (
   const registration = Promise.withResolvers<void>();
 
   navigator.locks.request(clientId, async () => {
-    const proxy = wrapWorkerPort<RegistryContract>(port);
+    const proxy = Comlink.wrap<WorkerContract<RegistryContract>>(port);
     await proxy.registerClient(clientId);
     registration.resolve();
     return new Promise(() => {});
@@ -105,12 +97,18 @@ const registerClient = async (
  * method call. Function arguments are wrapped with `Comlink.proxy` so
  * callbacks (e.g. subscription notification handlers) can cross the
  * worker boundary.
+ *
+ * Every proxied call awaits `ready` before reaching the worker, ensuring
+ * client registration completes before any operation is forwarded. This
+ * prevents a race where the worker receives calls from a client it hasn't
+ * registered yet. After the first resolution `await ready` is a no-op.
  */
 const deriveClient = <T extends Operations>(
   port: MessagePort,
   clientId: string,
+  ready: Promise<void>,
 ): T => {
-  const workerProxy = wrapWorkerPort<T>(port);
+  const workerProxy = Comlink.wrap<WorkerContract<T>>(port);
   const clientProxy = new Proxy(workerProxy, {
     get(target, propertyKey, receiver) {
       const property = Reflect.get(target, propertyKey, receiver);
@@ -118,7 +116,9 @@ const deriveClient = <T extends Operations>(
       if (typeof property !== "function") return property;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (...args: any[]) => {
+      return async (...args: any[]) => {
+        // Gate on registration: no call reaches the worker until the client is registered.
+        await ready;
         const processedArgs = args.map((arg) =>
           typeof arg === "function" ? Comlink.proxy(arg) : arg,
         );
@@ -166,7 +166,7 @@ export const createClient = <T extends Operations>({
   >,
 ] => {
   const { port } = sharedWorker;
-  registerClient(port, clientId);
-  const client = deriveClient<T>(port, clientId);
+  const ready = registerClient(port, clientId);
+  const client = deriveClient<T>(port, clientId, ready);
   return [client, subscriptions(client)] as const;
 };
